@@ -68,6 +68,7 @@ Window::Window()
     shapeComboBox->addItem(tr("Polyline"), RenderArea::Polyline);
     shapeComboBox->addItem(tr("Points"), RenderArea::Points);
     shapeComboBox->addItem(tr("Text"), RenderArea::Text);
+    shapeComboBox->addItem(tr("Path"), RenderArea::Path);
 
     shapeLabel = new QLabel(tr("&Shape:"));
     shapeLabel->setBuddy(shapeComboBox);
@@ -195,7 +196,7 @@ Window::Window()
     brushChanged();
     antialiasingCheckBox->setChecked(true);
 
-    setWindowTitle(tr("Basic Drawing"));
+    setWindowTitle(tr("Pre-processing Tiling Debug Plotting"));
 }
 //! [10]
 

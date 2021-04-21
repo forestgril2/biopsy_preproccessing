@@ -50,6 +50,8 @@
 
 #include "renderarea.h"
 
+#include <iostream>
+
 #include <QPainter>
 #include <QPainterPath>
 
@@ -87,15 +89,20 @@ RenderArea::RenderArea(QWidget *parent)
         qPointVectorMap[pair.first] = getQPointsF(*pair.second);
     }
 
+    std::cout << __FUNCTION__ << "  polygon vector map loop:" << std::endl;
     for (const auto& pair : polygonVectorMap)
     {
         const std::string annotation = pair.first;
+        std::cout << __FUNCTION__ << "  polygon vector annotation: " << annotation  << std::endl;
         const std::vector<bgPolygon>& bgPolygons = *pair.second;
+        std::cout << __FUNCTION__ << "  polygon vector size: " << bgPolygons.size() << std::endl;
 
         QPainterPath paths;
         for(const bgPolygon& polygonBg : bgPolygons)
         {
-            paths.addPolygon(QPolygonF(getQPointsF(polygonBg.outer())));
+            QVector<QPointF> points = getQPointsF(polygonBg.outer());
+            std::cout << __FUNCTION__ << "  adding polygon path with points.size():" << points.size() << "," << "" << std::endl;
+            paths.addPolygon(QPolygonF(points));
         }
         qPathsMap[annotation].swap(paths);
     }
@@ -168,10 +175,9 @@ void RenderArea::paintEvent(QPaintEvent * /* event */)
 
     QRect rect(10, 20, 80, 60);
 
-    QPainterPath path;
-    path.moveTo(20, 80);
-    path.lineTo(20, 30);
-    path.cubicTo(80, 0, 50, 50, 80, 80);
+    QPainterPath path(qPathsMap["tumor"]);
+
+//    std::cout << __FUNCTION__ << "  :" << path.toFillPolygon() << "," << "" << std::endl;
 
     QPainter painter(this);
     painter.setPen(pen);
@@ -179,38 +185,33 @@ void RenderArea::paintEvent(QPaintEvent * /* event */)
     if (antialiased)
         painter.setRenderHint(QPainter::Antialiasing, true);
 
-    for (int x = 0; x < width(); x += 100) {
-        for (int y = 0; y < height(); y += 100) {
-            painter.save();
-            painter.translate(x, y);
+    if (transformed) {
+//                painter.translate(50, 50);
+//                painter.rotate(60.0);
+        painter.scale(0.01, 0.01);
+//                painter.translate(-50, -50);
+    }
 
-            if (transformed) {
-                painter.translate(50, 50);
-                painter.rotate(60.0);
-                painter.scale(0.6, 0.9);
-                painter.translate(-50, -50);
-            }
-
-            switch (shape) {
-            case Line:
-                painter.drawLine(rect.bottomLeft(), rect.topRight());
-                break;
-            case Points:
-                painter.drawPoints(points.data(), (int)points.size());
-                break;
-            case Polyline:
-                painter.drawPolyline(points.data(), (int)points.size());
-                break;
-            case Polygon:
-                painter.drawPolygon(points.data(), (int)points.size());
-                break;
-            case Text:
-                painter.drawText(rect,
-                                 Qt::AlignCenter,
-                                 tr("Qt by\nThe Qt Company"));
-            }
-            painter.restore();
-        }
+    switch (shape) {
+    case Line:
+        painter.drawLine(rect.bottomLeft(), rect.topRight());
+        break;
+    case Points:
+        painter.drawPoints(points.data(), (int)points.size());
+        break;
+    case Polyline:
+        painter.drawPolyline(points.data(), (int)points.size());
+        break;
+    case Polygon:
+        painter.drawPolygon(points.data(), (int)points.size());
+        break;
+    case Text:
+        painter.drawText(rect,
+                         Qt::AlignCenter,
+                         tr("Qt by\nThe Qt Company"));
+        break;
+    case Path:
+        painter.drawPath(path);
     }
 
     painter.setRenderHint(QPainter::Antialiasing, false);

@@ -62,7 +62,7 @@ class RenderArea : public QWidget
     Q_OBJECT
 
 public:
-    enum Shape { Line, Points, Polyline, Polygon, Text};
+    enum Shape { Line, Points, Polyline, Polygon, Text, Path};
 
     explicit RenderArea(QWidget *parent = nullptr);
 
