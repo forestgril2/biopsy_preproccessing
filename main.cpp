@@ -49,9 +49,8 @@
 ****************************************************************************/
 
 #include "window.h"
-#include  <BiopsyTiler.h>
-
 #include <QApplication>
+
 
 int main(int argc, char *argv[])
 {

@@ -64,18 +64,10 @@ Window::Window()
 
     shapeComboBox = new QComboBox;
     shapeComboBox->addItem(tr("Polygon"), RenderArea::Polygon);
-    shapeComboBox->addItem(tr("Rectangle"), RenderArea::Rect);
-    shapeComboBox->addItem(tr("Rounded Rectangle"), RenderArea::RoundedRect);
-    shapeComboBox->addItem(tr("Ellipse"), RenderArea::Ellipse);
-    shapeComboBox->addItem(tr("Pie"), RenderArea::Pie);
-    shapeComboBox->addItem(tr("Chord"), RenderArea::Chord);
-    shapeComboBox->addItem(tr("Path"), RenderArea::Path);
     shapeComboBox->addItem(tr("Line"), RenderArea::Line);
     shapeComboBox->addItem(tr("Polyline"), RenderArea::Polyline);
-    shapeComboBox->addItem(tr("Arc"), RenderArea::Arc);
     shapeComboBox->addItem(tr("Points"), RenderArea::Points);
     shapeComboBox->addItem(tr("Text"), RenderArea::Text);
-    shapeComboBox->addItem(tr("Pixmap"), RenderArea::Pixmap);
 
     shapeLabel = new QLabel(tr("&Shape:"));
     shapeLabel->setBuddy(shapeComboBox);

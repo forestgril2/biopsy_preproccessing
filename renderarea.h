@@ -55,15 +55,14 @@
 #include <QPen>
 #include <QPixmap>
 #include <QWidget>
+#include <QPainterPath>
 
-//! [0]
 class RenderArea : public QWidget
 {
     Q_OBJECT
 
 public:
-    enum Shape { Line, Points, Polyline, Polygon, Rect, RoundedRect, Ellipse, Arc,
-                 Chord, Pie, Path, Text, Pixmap };
+    enum Shape { Line, Points, Polyline, Polygon, Text};
 
     explicit RenderArea(QWidget *parent = nullptr);
 
