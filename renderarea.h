@@ -86,6 +86,9 @@ private:
     bool antialiased;
     bool transformed;
     QPixmap pixmap;
+
+    std::map<std::string, QVector<QPointF>> qPointVectorMap;
+    std::map<std::string, QPainterPath> qPathsMap;
 };
 //! [0]
 

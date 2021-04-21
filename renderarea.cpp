@@ -53,7 +53,19 @@
 #include <QPainter>
 #include <QPainterPath>
 
-//! [0]
+#include <BiopsyTiler.h>
+
+QVector<QPointF> getQPointsF(const std::vector<bgPoint>& bgPoints)
+{
+    QVector<QPointF> newPoints;
+    newPoints.reserve(bgPoints.size());
+    for(const bgPoint& pointBg : bgPoints)
+    {
+        newPoints.append(QPointF(pointBg.x(), pointBg.y()));
+    }
+    return newPoints;
+}
+
 RenderArea::RenderArea(QWidget *parent)
     : QWidget(parent)
 {
@@ -64,6 +76,29 @@ RenderArea::RenderArea(QWidget *parent)
 
     setBackgroundRole(QPalette::Base);
     setAutoFillBackground(true);
+
+    BiopsyTiler biopsyData;
+
+    const std::map<std::string, std::vector<bgPoint>*> pointsBgVectorMap = biopsyData.getBgPoints();
+    const std::map<std::string, std::vector<bgPolygon>*> polygonVectorMap = biopsyData.getBgPolygons();
+
+    for (const auto& pair : pointsBgVectorMap)
+    {
+        qPointVectorMap[pair.first] = getQPointsF(*pair.second);
+    }
+
+    for (const auto& pair : polygonVectorMap)
+    {
+        const std::string annotation = pair.first;
+        const std::vector<bgPolygon>& bgPolygons = *pair.second;
+
+        QPainterPath paths;
+        for(const bgPolygon& polygonBg : bgPolygons)
+        {
+            paths.addPolygon(QPolygonF(getQPointsF(polygonBg.outer())));
+        }
+        qPathsMap[annotation].swap(paths);
+    }
 }
 //! [0]
 

@@ -1,4 +1,4 @@
-QT += widgets
+QT += widgets gui
 requires(qtConfig(combobox))
 
 HEADERS       = renderarea.h                         \
