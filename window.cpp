@@ -69,11 +69,18 @@ static const std::map<std::string, RenderArea::AnnotationFlags> kFlagsToAnnotati
     {"Control" , RenderArea::AnnotationFlags::Control },
     {"Exclude" , RenderArea::AnnotationFlags::Exclude },
 };
+
+static const std::map<std::string, RenderArea::Markers> kFlagsToMarkers =
+{
+    {"CD8 prolif."    , RenderArea::Markers::NonProliferatingCD8},
+    {"CD8 non-prolif.", RenderArea::Markers::ProliferatingCD8   },
+    {"Tumor prolif."  , RenderArea::Markers::ProliferatingTumor }
+};
 Window::Window()
 {
-    {
-        renderArea = new RenderArea;
+    renderArea = new RenderArea;
 
+    {
         annotationCheckboxes = new QWidget;
         annotationCheckboxes->setLayout(new QGridLayout);
         for(const auto& pair : kFlagsToAnnotations)
@@ -84,8 +91,23 @@ Window::Window()
             box->setChecked(true);
         }
 
-        annotationLabel = new QLabel(tr("&Annotations:"));
-        annotationLabel->setBuddy(annotationCheckboxes);
+        annotationsLabel = new QLabel(tr("&Annotations:"));
+        annotationsLabel->setBuddy(annotationCheckboxes);
+    }
+
+    {
+        markerCheckboxes = new QWidget;
+        markerCheckboxes->setLayout(new QGridLayout);
+        for(const auto& pair : kFlagsToMarkers)
+        {
+            QCheckBox* box = new QCheckBox(tr(pair.first.c_str()));
+            connect(box, &QCheckBox::stateChanged, this, &Window::onMarkersChanged);
+            markerCheckboxes->layout()->addWidget(box);
+            box->setChecked(true);
+        }
+
+        markersLabel = new QLabel(tr("&Markers:"));
+        markersLabel->setBuddy(markerCheckboxes);
     }
 
 //! [1]
@@ -190,15 +212,15 @@ Window::Window()
     mainLayout->setColumnStretch(0, 1);
     mainLayout->setColumnStretch(3, 1);
     mainLayout->addWidget(renderArea, 0, 0, 1, 4);
-    mainLayout->addWidget(annotationLabel, 2, 0, Qt::AlignRight);
+    mainLayout->addWidget(annotationsLabel, 2, 0, Qt::AlignRight);
     mainLayout->addWidget(annotationCheckboxes, 2, 1);
+    mainLayout->addWidget(markerCheckboxes, 2, 2);
     mainLayout->addWidget(penWidthLabel, 3, 0, Qt::AlignRight);
     mainLayout->addWidget(penWidthSpinBox, 3, 1);
     mainLayout->addWidget(penStyleLabel, 4, 0, Qt::AlignRight);
     mainLayout->addWidget(penStyleComboBox, 4, 1);
     mainLayout->addWidget(penCapLabel, 3, 2, Qt::AlignRight);
     mainLayout->addWidget(penCapComboBox, 3, 3);
-    mainLayout->addWidget(penJoinLabel, 2, 2, Qt::AlignRight);
     mainLayout->addWidget(penJoinComboBox, 2, 3);
     mainLayout->addWidget(brushStyleLabel, 4, 2, Qt::AlignRight);
     mainLayout->addWidget(brushStyleComboBox, 4, 3);
@@ -232,6 +254,23 @@ void Window::onAnnotationsChanged()
         annotationFlags |= kFlagsToAnnotations.at(box->text().toStdString());
     }
     renderArea->setAnnotation(annotationFlags);
+}
+
+void Window::onMarkersChanged()
+{
+    uint32_t markerFlags = 0;
+    for(uint32_t itemIndex=0; itemIndex<uint32_t(markerCheckboxes->layout()->count()); ++itemIndex)
+    {
+        QCheckBox* box = dynamic_cast<QCheckBox*>(markerCheckboxes->layout()->itemAt(itemIndex)->widget());
+        if (!box || box->checkState() != Qt::Checked)
+            continue;
+
+        if (kFlagsToMarkers.end() == kFlagsToMarkers.find(box->text().toStdString()))
+            continue;
+
+        markerFlags |= kFlagsToMarkers.at(box->text().toStdString());
+    }
+    renderArea->setMarkers(markerFlags);
 }
 //! [11]
 

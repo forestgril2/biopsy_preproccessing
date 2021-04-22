@@ -72,13 +72,15 @@ public:
 
 private slots:
     void onAnnotationsChanged();
+    void onMarkersChanged();
     void penChanged();
     void brushChanged();
 
 private:
     RenderArea *renderArea;
 
-    QLabel *annotationLabel;
+    QLabel *markersLabel;
+    QLabel *annotationsLabel;
     QLabel *penWidthLabel;
     QLabel *penStyleLabel;
     QLabel *penCapLabel;
@@ -86,6 +88,7 @@ private:
     QLabel *brushStyleLabel;
     QLabel *otherOptionsLabel;
     QWidget *annotationCheckboxes;
+    QWidget *markerCheckboxes;
     QSpinBox *penWidthSpinBox;
     QComboBox *penStyleComboBox;
     QComboBox *penCapComboBox;

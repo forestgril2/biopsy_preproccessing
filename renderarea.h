@@ -67,7 +67,9 @@ public:
                            Tissue   = 0x04,
                            Necrosis = 0x08,
                            Exclude  = 0x10 };
-    enum Markers { NonProliferatingCD8, ProliferatingCD8, ProliferatingTumor};
+    enum Markers { NonProliferatingCD8 = 0x01,
+                   ProliferatingCD8    = 0x02,
+                   ProliferatingTumor  = 0x04};
 
     explicit RenderArea(QWidget *parent = nullptr);
 
@@ -75,6 +77,7 @@ public:
     QSize sizeHint() const override;
 
 public slots:
+    void setMarkers(uint32_t markers);
     void setAnnotation(uint32_t annotations);
     void setPen(const QPen &pen);
     void setBrush(const QBrush &brush);
@@ -85,9 +88,10 @@ protected:
     void paintEvent(QPaintEvent *event) override;
 
 private:
-    QRectF getChosenAnnotationLimits() const;
+    QRectF getChosenObjectsLimits() const;
 
     uint32_t _annotationFlags;
+    uint32_t _markerFlags;
     QPen _pen;
     QBrush _brush;
     bool _antialiased;

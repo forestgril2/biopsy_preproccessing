@@ -96,13 +96,14 @@ RenderArea::RenderArea(QWidget *parent)
     for (const auto& pair : pointsBgVectorMap)
     {
         qPointVectorMap[pair.first] = getQPointsF(*pair.second);
+        std::cout << __FUNCTION__ << "  added markers: " << pair.first << ", with size: " << getQPointsF(*pair.second).size() << std::endl;
     }
 
     for (const auto& pair : polygonVectorMap)
     {
         const std::string annotation = pair.first;
         const std::vector<bgPolygon>& bgPolygons = *pair.second;
-        std::cout << __FUNCTION__ << "  polygon vector annotation: " << annotation  << ", vector size: " << bgPolygons.size() << std::endl;
+        std::cout << __FUNCTION__ << "  added polygon vector annotation: " << annotation  << ", vector size: " << bgPolygons.size() << std::endl;
 
         QPainterPath paths;
         for(const bgPolygon& polygonBg : bgPolygons)
@@ -126,6 +127,12 @@ QSize RenderArea::minimumSizeHint() const
 QSize RenderArea::sizeHint() const
 {
     return QSize(1000, 500);
+}
+
+void RenderArea::setMarkers(uint32_t markers)
+{
+    this->_markerFlags = markers;
+    update();
 }
 //! [2]
 
@@ -189,7 +196,7 @@ void RenderArea::paintEvent(QPaintEvent *event)
     }
     else
     {
-        const QRectF limits = getChosenAnnotationLimits();
+        const QRectF limits = getChosenObjectsLimits();
 
         QRectF flippedLimits;
         flippedLimits.setLeft(limits.left());
@@ -205,6 +212,7 @@ void RenderArea::paintEvent(QPaintEvent *event)
     painter.scale(scale.width(), scale.height());
     painter.translate(translate);
 
+    painter.setPen(QPen(Qt::black, 10, Qt::SolidLine, Qt::RoundCap));
     if (_annotationFlags & Control)
     {
         QColor controlColor(Qt::green);
@@ -241,13 +249,35 @@ void RenderArea::paintEvent(QPaintEvent *event)
         painter.drawPath(qPathsMap["exclude"]);
     }
 
+    if (_markerFlags & NonProliferatingCD8)
+    {
+        QColor color(Qt::blue);
+        painter.setBrush(color);
+        painter.setPen(QPen(painter.brush(), 50, Qt::SolidLine, Qt::RoundCap));
+        painter.drawPoints(qPointVectorMap["MKI67- CD8A+"]);
+    }
+    if (_markerFlags & ProliferatingCD8)
+    {
+        QColor color(Qt::cyan);
+        painter.setBrush(color);
+        painter.setPen(QPen(painter.brush(), 50, Qt::SolidLine, Qt::RoundCap));
+        painter.drawPoints(qPointVectorMap["MKI67+ CD8A+"]);
+    }
+    if (_markerFlags & ProliferatingTumor)
+    {
+        QColor color(Qt::red);
+        painter.setBrush(color);
+        painter.setPen(QPen(painter.brush(), 50, Qt::SolidLine, Qt::RoundCap));
+        painter.drawPoints(qPointVectorMap["MKI67+ CD8A-"]);
+    }
+
     painter.setRenderHint(QPainter::Antialiasing, false);
     painter.setPen(palette().dark().color());
     painter.setBrush(Qt::NoBrush);
     painter.drawRect(QRect(0, 0, width() - 1, height() - 1));
 }
 
-QRectF RenderArea::getChosenAnnotationLimits() const
+QRectF RenderArea::getChosenObjectsLimits() const
 {
     QPainterPath chosenAnnotationPaths;
     if (_annotationFlags & Tumor)
