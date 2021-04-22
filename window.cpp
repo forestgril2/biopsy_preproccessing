@@ -58,19 +58,36 @@ const int IdRole = Qt::UserRole;
 //! [0]
 
 //! [1]
+//!
+
+
+static const std::map<std::string, RenderArea::AnnotationFlags> kFlagsToAnnotations =
+{
+    {"Tissue"  , RenderArea::AnnotationFlags::Tissue  },
+    {"Tumor"   , RenderArea::AnnotationFlags::Tumor   },
+    {"Necrosis", RenderArea::AnnotationFlags::Necrosis},
+    {"Control" , RenderArea::AnnotationFlags::Control },
+    {"Exclude" , RenderArea::AnnotationFlags::Exclude },
+};
 Window::Window()
 {
-    renderArea = new RenderArea;
+    {
+        renderArea = new RenderArea;
 
-    annotationComboBox = new QComboBox;
-    annotationComboBox->addItem(tr("Tissue"),   RenderArea::Tissue  );
-    annotationComboBox->addItem(tr("Tumor"),    RenderArea::Tumor   );
-    annotationComboBox->addItem(tr("Necrosis"), RenderArea::Necrosis);
-    annotationComboBox->addItem(tr("Control"),  RenderArea::Control );
-    annotationComboBox->addItem(tr("Exclude"),  RenderArea::Exclude );
+        annotationCheckboxes = new QWidget;
+        annotationCheckboxes->setLayout(new QGridLayout);
+        for(const auto& pair : kFlagsToAnnotations)
+        {
+            QCheckBox* box = new QCheckBox(tr(pair.first.c_str()));
+            connect(box, &QCheckBox::stateChanged, this, &Window::onAnnotationsChanged);
+            annotationCheckboxes->layout()->addWidget(box);
+            box->setChecked(true);
+        }
 
-    annotationLabel = new QLabel(tr("&Annotation:"));
-    annotationLabel->setBuddy(annotationComboBox);
+        annotationLabel = new QLabel(tr("&Annotations:"));
+        annotationLabel->setBuddy(annotationCheckboxes);
+    }
+
 //! [1]
 
 //! [2]
@@ -145,12 +162,12 @@ Window::Window()
 //! [5] //! [6]
     antialiasingCheckBox = new QCheckBox(tr("&Antialiasing"));
 //! [6] //! [7]
-    transformationsCheckBox = new QCheckBox(tr("&Transformations"));
+    fitToAllCheckBox = new QCheckBox(tr("&Fit to all data"));
 //! [7]
 
 //! [8]
-    connect(annotationComboBox, QOverload<int>::of(&QComboBox::activated),
-            this, &Window::annotationChanged);
+//    connect(annotationCheckboxes, QOverload<int>::of(&QComboBox::activated),
+//            this, &Window::onAnnotationsChanged);
     connect(penWidthSpinBox, QOverload<int>::of(&QSpinBox::valueChanged),
             this, &Window::penChanged);
     connect(penStyleComboBox, QOverload<int>::of(&QComboBox::activated),
@@ -163,7 +180,7 @@ Window::Window()
             this, &Window::brushChanged);
     connect(antialiasingCheckBox, &QAbstractButton::toggled,
             renderArea, &RenderArea::setAntialiased);
-    connect(transformationsCheckBox, &QAbstractButton::toggled,
+    connect(fitToAllCheckBox, &QAbstractButton::toggled,
             renderArea, &RenderArea::setFittedToTotalLmits);
 //! [8]
 
@@ -174,7 +191,7 @@ Window::Window()
     mainLayout->setColumnStretch(3, 1);
     mainLayout->addWidget(renderArea, 0, 0, 1, 4);
     mainLayout->addWidget(annotationLabel, 2, 0, Qt::AlignRight);
-    mainLayout->addWidget(annotationComboBox, 2, 1);
+    mainLayout->addWidget(annotationCheckboxes, 2, 1);
     mainLayout->addWidget(penWidthLabel, 3, 0, Qt::AlignRight);
     mainLayout->addWidget(penWidthSpinBox, 3, 1);
     mainLayout->addWidget(penStyleLabel, 4, 0, Qt::AlignRight);
@@ -187,10 +204,10 @@ Window::Window()
     mainLayout->addWidget(brushStyleComboBox, 4, 3);
     mainLayout->addWidget(otherOptionsLabel, 5, 0, Qt::AlignRight);
     mainLayout->addWidget(antialiasingCheckBox, 5, 1, 1, 1, Qt::AlignRight);
-    mainLayout->addWidget(transformationsCheckBox, 5, 2, 1, 2, Qt::AlignRight);
+    mainLayout->addWidget(fitToAllCheckBox, 5, 2, 1, 2, Qt::AlignRight);
     setLayout(mainLayout);
 
-    annotationChanged();
+    onAnnotationsChanged();
     penChanged();
     brushChanged();
     antialiasingCheckBox->setChecked(true);
@@ -200,11 +217,21 @@ Window::Window()
 //! [10]
 
 //! [11]
-void Window::annotationChanged()
+void Window::onAnnotationsChanged()
 {
-    RenderArea::Annotations annotation = RenderArea::Annotations(annotationComboBox->itemData(
-            annotationComboBox->currentIndex(), IdRole).toInt());
-    renderArea->setAnnotation(annotation);
+    uint32_t annotationFlags = 0;
+    for(uint32_t itemIndex=0; itemIndex<uint32_t(annotationCheckboxes->layout()->count()); ++itemIndex)
+    {
+        QCheckBox* box = dynamic_cast<QCheckBox*>(annotationCheckboxes->layout()->itemAt(itemIndex)->widget());
+        if (!box || box->checkState() != Qt::Checked)
+            continue;
+
+        if (kFlagsToAnnotations.end() == kFlagsToAnnotations.find(box->text().toStdString()))
+            continue;
+
+        annotationFlags |= kFlagsToAnnotations.at(box->text().toStdString());
+    }
+    renderArea->setAnnotation(annotationFlags);
 }
 //! [11]
 

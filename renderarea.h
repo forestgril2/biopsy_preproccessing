@@ -62,7 +62,11 @@ class RenderArea : public QWidget
     Q_OBJECT
 
 public:
-    enum Annotations { Tumor, Control, Tissue, Necrosis, Exclude};
+    enum AnnotationFlags { Tumor    = 0x01,
+                           Control  = 0x02,
+                           Tissue   = 0x04,
+                           Necrosis = 0x08,
+                           Exclude  = 0x10 };
     enum Markers { NonProliferatingCD8, ProliferatingCD8, ProliferatingTumor};
 
     explicit RenderArea(QWidget *parent = nullptr);
@@ -71,7 +75,7 @@ public:
     QSize sizeHint() const override;
 
 public slots:
-    void setAnnotation(Annotations annotation);
+    void setAnnotation(uint32_t annotations);
     void setPen(const QPen &pen);
     void setBrush(const QBrush &brush);
     void setAntialiased(bool antialiased);
@@ -81,7 +85,9 @@ protected:
     void paintEvent(QPaintEvent *event) override;
 
 private:
-    Annotations _annotation;
+    QRectF getChosenAnnotationLimits() const;
+
+    uint32_t _annotationFlags;
     QPen _pen;
     QBrush _brush;
     bool _antialiased;

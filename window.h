@@ -56,6 +56,7 @@
 QT_BEGIN_NAMESPACE
 class QCheckBox;
 class QComboBox;
+class QGridLayout;
 class QLabel;
 class QSpinBox;
 QT_END_NAMESPACE
@@ -70,7 +71,7 @@ public:
     Window();
 
 private slots:
-    void annotationChanged();
+    void onAnnotationsChanged();
     void penChanged();
     void brushChanged();
 
@@ -84,14 +85,14 @@ private:
     QLabel *penJoinLabel;
     QLabel *brushStyleLabel;
     QLabel *otherOptionsLabel;
-    QComboBox *annotationComboBox;
+    QWidget *annotationCheckboxes;
     QSpinBox *penWidthSpinBox;
     QComboBox *penStyleComboBox;
     QComboBox *penCapComboBox;
     QComboBox *penJoinComboBox;
     QComboBox *brushStyleComboBox;
     QCheckBox *antialiasingCheckBox;
-    QCheckBox *transformationsCheckBox;
+    QCheckBox *fitToAllCheckBox;
 };
 //! [0]
 

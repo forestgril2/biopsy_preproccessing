@@ -73,9 +73,9 @@ static QVector<QPointF> getQPointsF(const std::vector<bgPoint>& bgPoints)
 RenderArea::RenderArea(QWidget *parent)
     : QWidget(parent)
 {
-    _annotation = Tumor;
+    _annotationFlags = Tumor;
     _antialiased = false;
-    _fitToTotalLimits = true;
+    _fitToTotalLimits = false;
     _pixmap.load(":/images/qt-logo.png");
 
     setBackgroundRole(QPalette::Base);
@@ -98,19 +98,16 @@ RenderArea::RenderArea(QWidget *parent)
         qPointVectorMap[pair.first] = getQPointsF(*pair.second);
     }
 
-    std::cout << __FUNCTION__ << "  polygon vector map loop:" << std::endl;
     for (const auto& pair : polygonVectorMap)
     {
         const std::string annotation = pair.first;
-        std::cout << __FUNCTION__ << "  polygon vector annotation: " << annotation  << std::endl;
         const std::vector<bgPolygon>& bgPolygons = *pair.second;
-        std::cout << __FUNCTION__ << "  polygon vector size: " << bgPolygons.size() << std::endl;
+        std::cout << __FUNCTION__ << "  polygon vector annotation: " << annotation  << ", vector size: " << bgPolygons.size() << std::endl;
 
         QPainterPath paths;
         for(const bgPolygon& polygonBg : bgPolygons)
         {
             QVector<QPointF> points = getQPointsF(polygonBg.outer());
-            std::cout << __FUNCTION__ << "  adding polygon path with points.size():" << points.size() << "," << "" << std::endl;
             paths.addPolygon(QPolygonF(points));
         }
         qPathsMap[annotation].swap(paths);
@@ -128,14 +125,14 @@ QSize RenderArea::minimumSizeHint() const
 //! [2]
 QSize RenderArea::sizeHint() const
 {
-    return QSize(400, 200);
+    return QSize(1000, 500);
 }
 //! [2]
 
 //! [3]
-void RenderArea::setAnnotation(Annotations annotation)
+void RenderArea::setAnnotation(uint32_t annotations)
 {
-    this->_annotation = annotation;
+    this->_annotationFlags = annotations;
     update();
 }
 //! [3]
@@ -181,47 +178,99 @@ void RenderArea::paintEvent(QPaintEvent *event)
     if (_antialiased)
         painter.setRenderHint(QPainter::Antialiasing, true);
 
+    const QSizeF paintAreaSize = event->rect().size();
+    QSizeF scale(1, 1);
+    QPointF translate(0, 0);
+
     if (_fitToTotalLimits) {
-//                painter.translate(50, 50);
-//                painter.rotate(60.0);
-//        QSize
-//        painter.translate(-_totalLimits.left(), -_totalLimits.top());
-        painter.scale(qreal(event->rect().size().width())/_totalLimits.size().width(),
-                      qreal(event->rect().size().height())/_totalLimits.size().height());
-        painter.translate(-_totalLimits.left(), -_totalLimits.top());
-//                painter.translate(-50, -50);
+        scale = {paintAreaSize.width()  / _totalLimits.size().width(),
+                 paintAreaSize.height() / _totalLimits.size().height()};
+        translate = {-_totalLimits.left(), -_totalLimits.top()};
     }
     else
     {
+        const QRectF limits = getChosenAnnotationLimits();
 
+        QRectF flippedLimits;
+        flippedLimits.setLeft(limits.left());
+        flippedLimits.setRight(limits.right());
+        flippedLimits.setTop(limits.bottom());
+        flippedLimits.setBottom(limits.top());
+
+        scale = {paintAreaSize.width()  / flippedLimits.size().width(),
+                 paintAreaSize.height() / flippedLimits.size().height()};
+        translate = {-flippedLimits.left(), -flippedLimits.top()};
     }
 
-    switch (_annotation) {
-        case Tumor:
-            painter.setBrush(QBrush(Qt::red));
-            painter.drawPath(qPathsMap["tumor"]);
-            break;
-        case Control:
-            painter.setBrush(QBrush(Qt::green));
-            painter.drawPath(qPathsMap["control"]);
-            break;
-        case Tissue:
-            painter.setBrush(QBrush(Qt::blue));
-            painter.drawPath(qPathsMap["tissue"]);
-            break;
-        case Necrosis:
-            painter.setBrush(QBrush(Qt::black));
-            painter.drawPath(qPathsMap["necrosis"]);
-            break;
-        case Exclude:
-            painter.setBrush(QBrush(Qt::darkGray));
-            painter.drawPath(qPathsMap["exclude"]);
-            break;
+    painter.scale(scale.width(), scale.height());
+    painter.translate(translate);
+
+    if (_annotationFlags & Control)
+    {
+        QColor controlColor(Qt::green);
+        controlColor.setAlpha(128);
+        painter.setBrush(controlColor);
+        painter.drawPath(qPathsMap["control"]);
+    }
+    if (_annotationFlags & Tumor)
+    {
+        QColor tumorColor(Qt::red);
+        tumorColor.setAlpha(128);
+        painter.setBrush(tumorColor);
+        painter.drawPath(qPathsMap["tumor"]);
+    }
+    if (_annotationFlags & Tissue)
+    {
+        QColor tissueColor(Qt::blue);
+        tissueColor.setAlpha(128);
+        painter.setBrush(tissueColor);
+        painter.drawPath(qPathsMap["tissue"]);
+    }
+    if (_annotationFlags & Necrosis)
+    {
+        QColor necrosisColor(Qt::black);
+        necrosisColor.setAlpha(128);
+        painter.setBrush(necrosisColor);
+        painter.drawPath(qPathsMap["necrosis"]);
+    }
+    if (_annotationFlags & Exclude)
+    {
+        QColor excludeColor(Qt::darkYellow);
+        excludeColor.setAlpha(128);
+        painter.setBrush(excludeColor);
+        painter.drawPath(qPathsMap["exclude"]);
     }
 
     painter.setRenderHint(QPainter::Antialiasing, false);
     painter.setPen(palette().dark().color());
     painter.setBrush(Qt::NoBrush);
     painter.drawRect(QRect(0, 0, width() - 1, height() - 1));
+}
+
+QRectF RenderArea::getChosenAnnotationLimits() const
+{
+    QPainterPath chosenAnnotationPaths;
+    if (_annotationFlags & Tumor)
+    {
+        chosenAnnotationPaths.addPath(qPathsMap.at("tumor"));
+    }
+    if (_annotationFlags & Control)
+    {
+        chosenAnnotationPaths.addPath(qPathsMap.at("control"));
+    }
+    if (_annotationFlags & Tissue)
+    {
+        chosenAnnotationPaths.addPath(qPathsMap.at("tissue"));
+    }
+    if (_annotationFlags & Necrosis)
+    {
+        chosenAnnotationPaths.addPath(qPathsMap.at("necrosis"));
+    }
+    if (_annotationFlags & Exclude)
+    {
+        chosenAnnotationPaths.addPath(qPathsMap.at("exclude"));
+    }
+
+    return chosenAnnotationPaths.boundingRect();
 }
 //! [13]
