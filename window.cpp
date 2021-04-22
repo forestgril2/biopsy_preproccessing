@@ -63,9 +63,9 @@ Window::Window()
     renderArea = new RenderArea;
 
     annotationComboBox = new QComboBox;
-    annotationComboBox->addItem(tr("Necrosis"), RenderArea::Necrosis);
-    annotationComboBox->addItem(tr("Tumor"),    RenderArea::Tumor   );
     annotationComboBox->addItem(tr("Tissue"),   RenderArea::Tissue  );
+    annotationComboBox->addItem(tr("Tumor"),    RenderArea::Tumor   );
+    annotationComboBox->addItem(tr("Necrosis"), RenderArea::Necrosis);
     annotationComboBox->addItem(tr("Control"),  RenderArea::Control );
     annotationComboBox->addItem(tr("Exclude"),  RenderArea::Exclude );
 
@@ -113,6 +113,7 @@ Window::Window()
 
 //! [4]
     brushStyleComboBox = new QComboBox;
+    brushStyleComboBox->addItem(tr("Solid"), static_cast<int>(Qt::SolidPattern));
     brushStyleComboBox->addItem(tr("Linear Gradient"),
             static_cast<int>(Qt::LinearGradientPattern));
     brushStyleComboBox->addItem(tr("Radial Gradient"),
@@ -120,7 +121,6 @@ Window::Window()
     brushStyleComboBox->addItem(tr("Conical Gradient"),
             static_cast<int>(Qt::ConicalGradientPattern));
     brushStyleComboBox->addItem(tr("Texture"), static_cast<int>(Qt::TexturePattern));
-    brushStyleComboBox->addItem(tr("Solid"), static_cast<int>(Qt::SolidPattern));
     brushStyleComboBox->addItem(tr("Horizontal"), static_cast<int>(Qt::HorPattern));
     brushStyleComboBox->addItem(tr("Vertical"), static_cast<int>(Qt::VerPattern));
     brushStyleComboBox->addItem(tr("Cross"), static_cast<int>(Qt::CrossPattern));
@@ -164,7 +164,7 @@ Window::Window()
     connect(antialiasingCheckBox, &QAbstractButton::toggled,
             renderArea, &RenderArea::setAntialiased);
     connect(transformationsCheckBox, &QAbstractButton::toggled,
-            renderArea, &RenderArea::setTransformed);
+            renderArea, &RenderArea::setFittedToTotalLmits);
 //! [8]
 
 //! [9]

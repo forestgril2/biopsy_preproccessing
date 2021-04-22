@@ -76,6 +76,7 @@ private slots:
 
 private:
     RenderArea *renderArea;
+
     QLabel *annotationLabel;
     QLabel *penWidthLabel;
     QLabel *penStyleLabel;

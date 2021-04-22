@@ -52,7 +52,9 @@
 
 #include <iostream>
 
+#include <QBrush>
 #include <QPainter>
+#include <QPaintEvent>
 #include <QPainterPath>
 
 #include <BiopsyTiler.h>
@@ -71,15 +73,22 @@ static QVector<QPointF> getQPointsF(const std::vector<bgPoint>& bgPoints)
 RenderArea::RenderArea(QWidget *parent)
     : QWidget(parent)
 {
-    annotation = Tumor;
-    antialiased = false;
-    transformed = false;
-    pixmap.load(":/images/qt-logo.png");
+    _annotation = Tumor;
+    _antialiased = false;
+    _fitToTotalLimits = true;
+    _pixmap.load(":/images/qt-logo.png");
 
     setBackgroundRole(QPalette::Base);
     setAutoFillBackground(true);
 
-    BiopsyTiler biopsyData;
+    const BiopsyTiler biopsyData;
+
+    BBox<double> limits = biopsyData.getTotalLimits();
+
+    _totalLimits.setLeft(limits[0]);
+    _totalLimits.setTop(limits[3]);
+    _totalLimits.setRight(limits[2]);
+    _totalLimits.setBottom(limits[1]);
 
     const std::map<std::string, std::vector<bgPoint>*> pointsBgVectorMap = biopsyData.getBgPoints();
     const std::map<std::string, std::vector<bgPolygon>*> polygonVectorMap = biopsyData.getBgPolygons();
@@ -126,7 +135,7 @@ QSize RenderArea::sizeHint() const
 //! [3]
 void RenderArea::setAnnotation(Annotations annotation)
 {
-    this->annotation = annotation;
+    this->_annotation = annotation;
     update();
 }
 //! [3]
@@ -134,7 +143,7 @@ void RenderArea::setAnnotation(Annotations annotation)
 //! [4]
 void RenderArea::setPen(const QPen &pen)
 {
-    this->pen = pen;
+    this->_pen = pen;
     update();
 }
 //! [4]
@@ -142,7 +151,7 @@ void RenderArea::setPen(const QPen &pen)
 //! [5]
 void RenderArea::setBrush(const QBrush &brush)
 {
-    this->brush = brush;
+    this->_brush = brush;
     update();
 }
 //! [5]
@@ -150,49 +159,62 @@ void RenderArea::setBrush(const QBrush &brush)
 //! [6]
 void RenderArea::setAntialiased(bool antialiased)
 {
-    this->antialiased = antialiased;
+    this->_antialiased = antialiased;
     update();
 }
 //! [6]
 
 //! [7]
-void RenderArea::setTransformed(bool transformed)
+void RenderArea::setFittedToTotalLmits(bool fitted)
 {
-    this->transformed = transformed;
+    this->_fitToTotalLimits = fitted;
     update();
 }
 //! [7]
 
 //! [8]
-void RenderArea::paintEvent(QPaintEvent * /* event */)
+void RenderArea::paintEvent(QPaintEvent *event)
 {
     QPainter painter(this);
-    painter.setPen(pen);
-    painter.setBrush(brush);
-    if (antialiased)
+    painter.setPen(_pen);
+    painter.setBrush(_brush);
+    if (_antialiased)
         painter.setRenderHint(QPainter::Antialiasing, true);
 
-    if (transformed) {
+    if (_fitToTotalLimits) {
 //                painter.translate(50, 50);
 //                painter.rotate(60.0);
-        painter.scale(0.01, 0.01);
+//        QSize
+//        painter.translate(-_totalLimits.left(), -_totalLimits.top());
+        painter.scale(qreal(event->rect().size().width())/_totalLimits.size().width(),
+                      qreal(event->rect().size().height())/_totalLimits.size().height());
+        painter.translate(-_totalLimits.left(), -_totalLimits.top());
 //                painter.translate(-50, -50);
     }
+    else
+    {
 
-    switch (annotation) {
+    }
+
+    switch (_annotation) {
         case Tumor:
+            painter.setBrush(QBrush(Qt::red));
             painter.drawPath(qPathsMap["tumor"]);
             break;
         case Control:
-            painter.drawPath(qPathsMap["controls"]);
+            painter.setBrush(QBrush(Qt::green));
+            painter.drawPath(qPathsMap["control"]);
             break;
         case Tissue:
+            painter.setBrush(QBrush(Qt::blue));
             painter.drawPath(qPathsMap["tissue"]);
             break;
         case Necrosis:
+            painter.setBrush(QBrush(Qt::black));
             painter.drawPath(qPathsMap["necrosis"]);
             break;
         case Exclude:
+            painter.setBrush(QBrush(Qt::darkGray));
             painter.drawPath(qPathsMap["exclude"]);
             break;
     }

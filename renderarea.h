@@ -75,21 +75,22 @@ public slots:
     void setPen(const QPen &pen);
     void setBrush(const QBrush &brush);
     void setAntialiased(bool antialiased);
-    void setTransformed(bool transformed);
+    void setFittedToTotalLmits(bool fitted);
 
 protected:
     void paintEvent(QPaintEvent *event) override;
 
 private:
-    Annotations annotation;
-    QPen pen;
-    QBrush brush;
-    bool antialiased;
-    bool transformed;
-    QPixmap pixmap;
+    Annotations _annotation;
+    QPen _pen;
+    QBrush _brush;
+    bool _antialiased;
+    bool _fitToTotalLimits;
+    QPixmap _pixmap;
 
     std::map<std::string, QVector<QPointF>> qPointVectorMap;
     std::map<std::string, QPainterPath> qPathsMap;
+    QRectF _totalLimits;
 };
 //! [0]
 
