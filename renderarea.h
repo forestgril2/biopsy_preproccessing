@@ -62,7 +62,8 @@ class RenderArea : public QWidget
     Q_OBJECT
 
 public:
-    enum Shape { Line, Points, Polyline, Polygon, Text, Path};
+    enum Annotations { Tumor, Control, Tissue, Necrosis, Exclude};
+    enum Markers { NonProliferatingCD8, ProliferatingCD8, ProliferatingTumor};
 
     explicit RenderArea(QWidget *parent = nullptr);
 
@@ -70,7 +71,7 @@ public:
     QSize sizeHint() const override;
 
 public slots:
-    void setShape(Shape shape);
+    void setAnnotation(Annotations annotation);
     void setPen(const QPen &pen);
     void setBrush(const QBrush &brush);
     void setAntialiased(bool antialiased);
@@ -80,7 +81,7 @@ protected:
     void paintEvent(QPaintEvent *event) override;
 
 private:
-    Shape shape;
+    Annotations annotation;
     QPen pen;
     QBrush brush;
     bool antialiased;

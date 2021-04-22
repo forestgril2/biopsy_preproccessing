@@ -62,16 +62,15 @@ Window::Window()
 {
     renderArea = new RenderArea;
 
-    shapeComboBox = new QComboBox;
-    shapeComboBox->addItem(tr("Polygon"), RenderArea::Polygon);
-    shapeComboBox->addItem(tr("Line"), RenderArea::Line);
-    shapeComboBox->addItem(tr("Polyline"), RenderArea::Polyline);
-    shapeComboBox->addItem(tr("Points"), RenderArea::Points);
-    shapeComboBox->addItem(tr("Text"), RenderArea::Text);
-    shapeComboBox->addItem(tr("Path"), RenderArea::Path);
+    annotationComboBox = new QComboBox;
+    annotationComboBox->addItem(tr("Necrosis"), RenderArea::Necrosis);
+    annotationComboBox->addItem(tr("Tumor"),    RenderArea::Tumor   );
+    annotationComboBox->addItem(tr("Tissue"),   RenderArea::Tissue  );
+    annotationComboBox->addItem(tr("Control"),  RenderArea::Control );
+    annotationComboBox->addItem(tr("Exclude"),  RenderArea::Exclude );
 
-    shapeLabel = new QLabel(tr("&Shape:"));
-    shapeLabel->setBuddy(shapeComboBox);
+    annotationLabel = new QLabel(tr("&Annotation:"));
+    annotationLabel->setBuddy(annotationComboBox);
 //! [1]
 
 //! [2]
@@ -150,8 +149,8 @@ Window::Window()
 //! [7]
 
 //! [8]
-    connect(shapeComboBox, QOverload<int>::of(&QComboBox::activated),
-            this, &Window::shapeChanged);
+    connect(annotationComboBox, QOverload<int>::of(&QComboBox::activated),
+            this, &Window::annotationChanged);
     connect(penWidthSpinBox, QOverload<int>::of(&QSpinBox::valueChanged),
             this, &Window::penChanged);
     connect(penStyleComboBox, QOverload<int>::of(&QComboBox::activated),
@@ -174,8 +173,8 @@ Window::Window()
     mainLayout->setColumnStretch(0, 1);
     mainLayout->setColumnStretch(3, 1);
     mainLayout->addWidget(renderArea, 0, 0, 1, 4);
-    mainLayout->addWidget(shapeLabel, 2, 0, Qt::AlignRight);
-    mainLayout->addWidget(shapeComboBox, 2, 1);
+    mainLayout->addWidget(annotationLabel, 2, 0, Qt::AlignRight);
+    mainLayout->addWidget(annotationComboBox, 2, 1);
     mainLayout->addWidget(penWidthLabel, 3, 0, Qt::AlignRight);
     mainLayout->addWidget(penWidthSpinBox, 3, 1);
     mainLayout->addWidget(penStyleLabel, 4, 0, Qt::AlignRight);
@@ -191,7 +190,7 @@ Window::Window()
     mainLayout->addWidget(transformationsCheckBox, 5, 2, 1, 2, Qt::AlignRight);
     setLayout(mainLayout);
 
-    shapeChanged();
+    annotationChanged();
     penChanged();
     brushChanged();
     antialiasingCheckBox->setChecked(true);
@@ -201,11 +200,11 @@ Window::Window()
 //! [10]
 
 //! [11]
-void Window::shapeChanged()
+void Window::annotationChanged()
 {
-    RenderArea::Shape shape = RenderArea::Shape(shapeComboBox->itemData(
-            shapeComboBox->currentIndex(), IdRole).toInt());
-    renderArea->setShape(shape);
+    RenderArea::Annotations annotation = RenderArea::Annotations(annotationComboBox->itemData(
+            annotationComboBox->currentIndex(), IdRole).toInt());
+    renderArea->setAnnotation(annotation);
 }
 //! [11]
 

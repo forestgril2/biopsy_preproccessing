@@ -57,7 +57,7 @@
 
 #include <BiopsyTiler.h>
 
-QVector<QPointF> getQPointsF(const std::vector<bgPoint>& bgPoints)
+static QVector<QPointF> getQPointsF(const std::vector<bgPoint>& bgPoints)
 {
     QVector<QPointF> newPoints;
     newPoints.reserve(bgPoints.size());
@@ -71,7 +71,7 @@ QVector<QPointF> getQPointsF(const std::vector<bgPoint>& bgPoints)
 RenderArea::RenderArea(QWidget *parent)
     : QWidget(parent)
 {
-    shape = Polygon;
+    annotation = Tumor;
     antialiased = false;
     transformed = false;
     pixmap.load(":/images/qt-logo.png");
@@ -124,9 +124,9 @@ QSize RenderArea::sizeHint() const
 //! [2]
 
 //! [3]
-void RenderArea::setShape(Shape shape)
+void RenderArea::setAnnotation(Annotations annotation)
 {
-    this->shape = shape;
+    this->annotation = annotation;
     update();
 }
 //! [3]
@@ -166,19 +166,6 @@ void RenderArea::setTransformed(bool transformed)
 //! [8]
 void RenderArea::paintEvent(QPaintEvent * /* event */)
 {
-    static const std::vector<QPoint> points = {
-        QPoint(10, 80),
-        QPoint(20, 10),
-        QPoint(80, 30),
-        QPoint(90, 70)
-    };
-
-    QRect rect(10, 20, 80, 60);
-
-    QPainterPath path(qPathsMap["tumor"]);
-
-//    std::cout << __FUNCTION__ << "  :" << path.toFillPolygon() << "," << "" << std::endl;
-
     QPainter painter(this);
     painter.setPen(pen);
     painter.setBrush(brush);
@@ -192,26 +179,22 @@ void RenderArea::paintEvent(QPaintEvent * /* event */)
 //                painter.translate(-50, -50);
     }
 
-    switch (shape) {
-    case Line:
-        painter.drawLine(rect.bottomLeft(), rect.topRight());
-        break;
-    case Points:
-        painter.drawPoints(points.data(), (int)points.size());
-        break;
-    case Polyline:
-        painter.drawPolyline(points.data(), (int)points.size());
-        break;
-    case Polygon:
-        painter.drawPolygon(points.data(), (int)points.size());
-        break;
-    case Text:
-        painter.drawText(rect,
-                         Qt::AlignCenter,
-                         tr("Qt by\nThe Qt Company"));
-        break;
-    case Path:
-        painter.drawPath(path);
+    switch (annotation) {
+        case Tumor:
+            painter.drawPath(qPathsMap["tumor"]);
+            break;
+        case Control:
+            painter.drawPath(qPathsMap["controls"]);
+            break;
+        case Tissue:
+            painter.drawPath(qPathsMap["tissue"]);
+            break;
+        case Necrosis:
+            painter.drawPath(qPathsMap["necrosis"]);
+            break;
+        case Exclude:
+            painter.drawPath(qPathsMap["exclude"]);
+            break;
     }
 
     painter.setRenderHint(QPainter::Antialiasing, false);

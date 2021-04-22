@@ -70,20 +70,20 @@ public:
     Window();
 
 private slots:
-    void shapeChanged();
+    void annotationChanged();
     void penChanged();
     void brushChanged();
 
 private:
     RenderArea *renderArea;
-    QLabel *shapeLabel;
+    QLabel *annotationLabel;
     QLabel *penWidthLabel;
     QLabel *penStyleLabel;
     QLabel *penCapLabel;
     QLabel *penJoinLabel;
     QLabel *brushStyleLabel;
     QLabel *otherOptionsLabel;
-    QComboBox *shapeComboBox;
+    QComboBox *annotationComboBox;
     QSpinBox *penWidthSpinBox;
     QComboBox *penStyleComboBox;
     QComboBox *penCapComboBox;
