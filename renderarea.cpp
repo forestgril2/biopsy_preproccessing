@@ -280,6 +280,7 @@ void RenderArea::paintEvent(QPaintEvent *event)
 QRectF RenderArea::getChosenObjectsLimits() const
 {
     QPainterPath chosenAnnotationPaths;
+
     if (_annotationFlags & Tumor)
     {
         chosenAnnotationPaths.addPath(qPathsMap.at("tumor"));
@@ -301,6 +302,30 @@ QRectF RenderArea::getChosenObjectsLimits() const
         chosenAnnotationPaths.addPath(qPathsMap.at("exclude"));
     }
 
-    return chosenAnnotationPaths.boundingRect();
+    QRectF bounding = chosenAnnotationPaths.boundingRect();
+
+    auto getPointsBoundingRect = [](const QVector<QPointF>& points) {
+        BBox<qreal> bbox;
+        for(uint32_t i=0; i<(uint32_t)points.size(); i +=2)
+        {
+            bbox.resize(BBox<qreal>({points[i].x(), points[i].y(), points[i +1].x(), points[i +1].y()}));
+        }
+        return QRectF{QPointF{bbox[0], bbox[1]}, QPointF{bbox[2], bbox[3]}};
+    };
+
+    if (_markerFlags & NonProliferatingCD8)
+    {
+        bounding |= getPointsBoundingRect(qPointVectorMap.at("MKI67- CD8A+"));
+    }
+    if (_markerFlags & ProliferatingCD8)
+    {
+        bounding |= getPointsBoundingRect(qPointVectorMap.at("MKI67+ CD8A+"));
+    }
+    if (_markerFlags & ProliferatingTumor)
+    {
+        bounding |= getPointsBoundingRect(qPointVectorMap.at("MKI67+ CD8A-"));
+    }
+
+    return bounding;
 }
 //! [13]
