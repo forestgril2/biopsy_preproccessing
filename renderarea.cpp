@@ -271,20 +271,21 @@ void RenderArea::paintEvent(QPaintEvent *event)
         painter.drawPoints(qPointVectorMap["MKI67+ CD8A-"]);
     }
 
+    painter.setRenderHint(QPainter::Antialiasing, false);
     painter.setBrush(Qt::transparent);
     if (_annotationFlags & TissueAndTumor)
     {
-        painter.setPen(QPen(Qt::green, 50, Qt::SolidLine, Qt::RoundCap));
+        painter.setPen(QPen(Qt::black, 100, Qt::SolidLine, Qt::RoundCap));
         painter.drawPath(qPathsMap["TissueAndTumor"]);
     }
     if (_annotationFlags & ExcludeAndNecrosis)
     {
-        painter.setPen(QPen(Qt::magenta, 50, Qt::SolidLine, Qt::RoundCap));
+        painter.setPen(QPen(Qt::magenta, 75, Qt::SolidLine, Qt::RoundCap));
         painter.drawPath(qPathsMap["ExcludeAndNecrosis"]);
     }
     if (_annotationFlags & Final)
     {
-        painter.setPen(QPen(Qt::black, 50, Qt::SolidLine, Qt::RoundCap));
+        painter.setPen(QPen(Qt::green, 30, Qt::SolidLine, Qt::RoundCap));
         painter.drawPath(qPathsMap["Final"]);
     }
 
