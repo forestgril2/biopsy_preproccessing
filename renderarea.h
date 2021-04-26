@@ -62,14 +62,20 @@ class RenderArea : public QWidget
     Q_OBJECT
 
 public:
-    enum AnnotationFlags { Tumor    = 0x01,
-                           Control  = 0x02,
-                           Tissue   = 0x04,
-                           Necrosis = 0x08,
-                           Exclude  = 0x10 };
-    enum Markers { NonProliferatingCD8 = 0x01,
-                   ProliferatingCD8    = 0x02,
-                   ProliferatingTumor  = 0x04};
+    enum PolygonFlags { Tumor               = 0x01,
+                        Control             = 0x02,
+                        Tissue              = 0x04,
+                        Necrosis            = 0x08,
+                        Exclude             = 0x10,
+                        TissueAndTumor      = 0x20,
+                        ExcludeAndNecrosis  = 0x40,
+                        Final               = 0x80
+                      };
+
+    enum MarkerFlags { NonProliferatingCD8 = 0x01,
+                       ProliferatingCD8    = 0x02,
+                       ProliferatingTumor  = 0x04}
+                     ;
 
     explicit RenderArea(QWidget *parent = nullptr);
 

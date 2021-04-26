@@ -102,11 +102,11 @@ RenderArea::RenderArea(QWidget *parent)
     for (const auto& pair : polygonVectorMap)
     {
         const std::string annotation = pair.first;
-        const std::vector<bgPolygon>& bgPolygons = *pair.second;
-        std::cout << __FUNCTION__ << "  added polygon vector annotation: " << annotation  << ", vector size: " << bgPolygons.size() << std::endl;
+        const bgPolygons& polygonsBg = *pair.second;
+        std::cout << __FUNCTION__ << "  adding polygon vector annotation: " << annotation  << ", vector size: " << polygonsBg.size() << std::endl;
 
         QPainterPath paths;
-        for(const bgPolygon& polygonBg : bgPolygons)
+        for(const bgPolygon& polygonBg : polygonsBg)
         {
             QVector<QPointF> points = getQPointsF(polygonBg.outer());
             paths.addPolygon(QPolygonF(points));
@@ -271,6 +271,24 @@ void RenderArea::paintEvent(QPaintEvent *event)
         painter.drawPoints(qPointVectorMap["MKI67+ CD8A-"]);
     }
 
+    painter.setBrush(Qt::transparent);
+    if (_annotationFlags & TissueAndTumor)
+    {
+        painter.setPen(QPen(Qt::green, 50, Qt::SolidLine, Qt::RoundCap));
+        painter.drawPath(qPathsMap["TissueAndTumor"]);
+    }
+    if (_annotationFlags & ExcludeAndNecrosis)
+    {
+        painter.setPen(QPen(Qt::magenta, 50, Qt::SolidLine, Qt::RoundCap));
+        painter.drawPath(qPathsMap["ExcludeAndNecrosis"]);
+    }
+    if (_annotationFlags & Final)
+    {
+        painter.setPen(QPen(Qt::black, 50, Qt::SolidLine, Qt::RoundCap));
+        painter.drawPath(qPathsMap["Final"]);
+    }
+
+
     painter.setRenderHint(QPainter::Antialiasing, false);
     painter.setPen(palette().dark().color());
     painter.setBrush(Qt::NoBrush);
@@ -301,14 +319,38 @@ QRectF RenderArea::getChosenObjectsLimits() const
     {
         chosenAnnotationPaths.addPath(qPathsMap.at("exclude"));
     }
+    if (_annotationFlags & TissueAndTumor)
+    {
+        chosenAnnotationPaths.addPath(qPathsMap.at("TissueAndTumor"));
+    }
+    if (_annotationFlags & ExcludeAndNecrosis)
+    {
+        chosenAnnotationPaths.addPath(qPathsMap.at("ExcludeAndNecrosis"));
+    }
+    if (_annotationFlags & Final)
+    {
+        chosenAnnotationPaths.addPath(qPathsMap.at("Final"));
+    }
 
     QRectF bounding = chosenAnnotationPaths.boundingRect();
 
     auto getPointsBoundingRect = [](const QVector<QPointF>& points) {
         BBox<qreal> bbox;
-        for(uint32_t i=0; i<(uint32_t)points.size(); i +=2)
+        const uint32_t limits = (uint32_t)points.size() -1;
+        for(uint32_t i=0; i<limits; i+=2)
         {
-            bbox.resize(BBox<qreal>({points[i].x(), points[i].y(), points[i +1].x(), points[i +1].y()}));
+            bbox.resize(BBox<qreal>({points[i   ].x(),
+                                     points[i   ].y(),
+                                     points[i +1].x(),
+                                     points[i +1].y()}));
+        }
+
+        if (0 != points.size() % 2)
+        {//Get last box for already included point ana a last one, which is odd.
+            bbox.resize(BBox<qreal>({points[limits -2].x(),
+                                     points[limits -2].y(),
+                                     points[limits -1].x(),
+                                     points[limits -1].y()}));
         }
         return QRectF{QPointF{bbox[0], bbox[1]}, QPointF{bbox[2], bbox[3]}};
     };

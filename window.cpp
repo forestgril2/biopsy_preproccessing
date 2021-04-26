@@ -61,20 +61,23 @@ const int IdRole = Qt::UserRole;
 //!
 
 
-static const std::map<std::string, RenderArea::AnnotationFlags> kFlagsToAnnotations =
+static const std::map<std::string, RenderArea::PolygonFlags> kFlagsToAnnotations =
 {
-    {"Tissue"  , RenderArea::AnnotationFlags::Tissue  },
-    {"Tumor"   , RenderArea::AnnotationFlags::Tumor   },
-    {"Necrosis", RenderArea::AnnotationFlags::Necrosis},
-    {"Control" , RenderArea::AnnotationFlags::Control },
-    {"Exclude" , RenderArea::AnnotationFlags::Exclude },
+    {"Tissue"  ,              RenderArea::PolygonFlags::Tissue             },
+    {"Tumor"   ,              RenderArea::PolygonFlags::Tumor              },
+    {"Necrosis",              RenderArea::PolygonFlags::Necrosis           },
+    {"Control" ,              RenderArea::PolygonFlags::Control            },
+    {"Exclude" ,              RenderArea::PolygonFlags::Exclude            },
+    {"Tissue and Tumor" ,     RenderArea::PolygonFlags::TissueAndTumor     },
+    {"Exclude and Necrosis" , RenderArea::PolygonFlags::ExcludeAndNecrosis },
+    {"Final" ,                RenderArea::PolygonFlags::Final              },
 };
 
-static const std::map<std::string, RenderArea::Markers> kFlagsToMarkers =
+static const std::map<std::string, RenderArea::MarkerFlags> kFlagsToMarkers =
 {
-    {"CD8 prolif."    , RenderArea::Markers::NonProliferatingCD8},
-    {"CD8 non-prolif.", RenderArea::Markers::ProliferatingCD8   },
-    {"Tumor prolif."  , RenderArea::Markers::ProliferatingTumor }
+    {"CD8 prolif."    , RenderArea::MarkerFlags::ProliferatingCD8},
+    {"CD8 non-prolif.", RenderArea::MarkerFlags::NonProliferatingCD8   },
+    {"Tumor prolif."  , RenderArea::MarkerFlags::ProliferatingTumor }
 };
 Window::Window()
 {
@@ -88,7 +91,7 @@ Window::Window()
             QCheckBox* box = new QCheckBox(tr(pair.first.c_str()));
             connect(box, &QCheckBox::stateChanged, this, &Window::onAnnotationsChanged);
             annotationCheckboxes->layout()->addWidget(box);
-            box->setChecked(true);
+            box->setChecked(pair.second != RenderArea::PolygonFlags::Control);
         }
 
         annotationsLabel = new QLabel(tr("&Annotations:"));
