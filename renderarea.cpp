@@ -110,6 +110,18 @@ RenderArea::RenderArea(QWidget *parent)
         {
             QVector<QPointF> points = getQPointsF(polygonBg.outer());
             paths.addPolygon(QPolygonF(points));
+
+            //TODO: there may be more inceptions here!
+            for (const auto& innerPolygon : polygonBg.inners())
+            {
+                bgPolygon polygon;
+                bg::convert(innerPolygon, polygon);
+                QPainterPath innerPath;
+                QVector<QPointF> points = getQPointsF(polygon.outer());
+                innerPath.addPolygon(QPolygonF(points));
+                innerPath = innerPath.toReversed();
+                paths.addPath(innerPath);
+            }
         }
         qPathsMap[annotation].swap(paths);
     }
@@ -285,7 +297,8 @@ void RenderArea::paintEvent(QPaintEvent *event)
     }
     if (_annotationFlags & Final)
     {
-        painter.setPen(QPen(Qt::green, 30, Qt::SolidLine, Qt::RoundCap));
+        painter.setBrush(Qt::green);
+        painter.setPen(QPen(Qt::black, 30, Qt::SolidLine, Qt::RoundCap));
         painter.drawPath(qPathsMap["Final"]);
     }
 
