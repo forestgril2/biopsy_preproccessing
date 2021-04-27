@@ -60,7 +60,7 @@
 
 #include <BiopsyTiler.h>
 
-static const std::map<PolygonFlags, QColor> qPolygonPathColorsMap =
+static const std::map<PolygonFlags, QColor> kQPolygonPathColorsMap =
 {
     {PolygonFlags::Tumor             , Qt::red},
     {PolygonFlags::Control           , Qt::green},
@@ -72,19 +72,22 @@ static const std::map<PolygonFlags, QColor> qPolygonPathColorsMap =
     {PolygonFlags::Final             , Qt::green}
 };
 
-static const std::map<PolygonFlags, QPen> qPolygonPathPensMap =
+static const Qt::PenStyle kBasePenStyle = Qt::SolidLine;
+static const Qt::PenCapStyle kBasePenCapStyle = Qt::RoundCap;
+
+static const std::map<PolygonFlags, QPen> kQPolygonPathPensMap =
 {
-    {PolygonFlags::Tumor             , QPen(Qt::black,   10,  Qt::SolidLine, Qt::RoundCap)},
-    {PolygonFlags::Control           , QPen(Qt::black,   10,  Qt::SolidLine, Qt::RoundCap)},
-    {PolygonFlags::Tissue            , QPen(Qt::black,   10,  Qt::SolidLine, Qt::RoundCap)},
-    {PolygonFlags::Necrosis          , QPen(Qt::black,   10,  Qt::SolidLine, Qt::RoundCap)},
-    {PolygonFlags::Exclude           , QPen(Qt::black,   10,  Qt::SolidLine, Qt::RoundCap)},
-    {PolygonFlags::TissueAndTumor    , QPen(Qt::black,   100, Qt::SolidLine, Qt::RoundCap)},
-    {PolygonFlags::ExcludeOrNecrosis , QPen(Qt::magenta, 75,  Qt::SolidLine, Qt::RoundCap)},
-    {PolygonFlags::Final             , QPen(Qt::green,   30,  Qt::SolidLine, Qt::RoundCap)}
+    {PolygonFlags::Tumor             , QPen(Qt::black,   10,  kBasePenStyle, kBasePenCapStyle)},
+    {PolygonFlags::Control           , QPen(Qt::black,   10,  kBasePenStyle, kBasePenCapStyle)},
+    {PolygonFlags::Tissue            , QPen(Qt::black,   10,  kBasePenStyle, kBasePenCapStyle)},
+    {PolygonFlags::Necrosis          , QPen(Qt::black,   10,  kBasePenStyle, kBasePenCapStyle)},
+    {PolygonFlags::Exclude           , QPen(Qt::black,   10,  kBasePenStyle, kBasePenCapStyle)},
+    {PolygonFlags::TissueAndTumor    , QPen(Qt::black,   100, kBasePenStyle, kBasePenCapStyle)},
+    {PolygonFlags::ExcludeOrNecrosis , QPen(Qt::magenta, 75,  kBasePenStyle, kBasePenCapStyle)},
+    {PolygonFlags::Final             , QPen(Qt::green,   30,  kBasePenStyle, kBasePenCapStyle)}
 };
 
-static const std::map<PointFlags, QColor> qPointColorsMap =
+static const std::map<PointFlags, QColor> kQPointColorsMap =
 {
     {PointFlags::NonProliferatingCD8  , Qt::blue},
     {PointFlags::ProliferatingCD8     , Qt::cyan},
@@ -94,15 +97,16 @@ static const std::map<PointFlags, QColor> qPointColorsMap =
     {PointFlags::ImmuneNonProlifFinal , Qt::blue},
 };
 
+static const QPen kBasePointPen = QPen(Qt::black, 50, Qt::SolidLine, Qt::RoundCap);
 
-static const std::map<PointFlags, QPen> qPointPenMap =
+static const std::map<PointFlags, QPen> kQPointPenMap =
 {
-    {PointFlags::NonProliferatingCD8  , QPen(Qt::black, 50, Qt::SolidLine, Qt::RoundCap)},
-    {PointFlags::ProliferatingCD8     , QPen(Qt::black, 50, Qt::SolidLine, Qt::RoundCap)},
-    {PointFlags::ProliferatingTumor   , QPen(Qt::black, 50, Qt::SolidLine, Qt::RoundCap)},
-    {PointFlags::TumorFinal           , QPen(Qt::black, 50, Qt::SolidLine, Qt::RoundCap)},
-    {PointFlags::ImmuneProlifFinal    , QPen(Qt::black, 50, Qt::SolidLine, Qt::RoundCap)},
-    {PointFlags::ImmuneNonProlifFinal , QPen(Qt::black, 50, Qt::SolidLine, Qt::RoundCap)}
+    {PointFlags::NonProliferatingCD8  , kBasePointPen},
+    {PointFlags::ProliferatingCD8     , kBasePointPen},
+    {PointFlags::ProliferatingTumor   , kBasePointPen},
+    {PointFlags::TumorFinal           , kBasePointPen},
+    {PointFlags::ImmuneProlifFinal    , kBasePointPen},
+    {PointFlags::ImmuneNonProlifFinal , kBasePointPen}
 };
 
 static QVector<QPointF> getQPointsF(const std::vector<bgPoint>& bgPoints)
@@ -270,12 +274,11 @@ void RenderArea::paintEvent(QPaintEvent *event)
 
     painter.setRenderHint(QPainter::Antialiasing, false);
     painter.setPen(palette().dark().color());
-    painter.setBrush(Qt::NoBrush);
     painter.drawRect(QRect(0, 0, width() - 1, height() - 1));
 
     auto drawPolygon = [this, &painter](PolygonFlags flag) {
-        QColor controlColor(qPolygonPathColorsMap.at(flag));
-        painter.setPen(qPolygonPathPensMap.at(flag));
+        QColor controlColor(kQPolygonPathColorsMap.at(flag));
+        painter.setPen(kQPolygonPathPensMap.at(flag));
         controlColor.setAlpha(128);
         painter.setBrush(controlColor);
         painter.drawPath(qPathsMap[flag]);
@@ -290,9 +293,9 @@ void RenderArea::paintEvent(QPaintEvent *event)
     }
 
     auto drawPointVector = [this, &painter](PointFlags flag) {
-        const QColor color(qPointColorsMap.at(flag));
+        const QColor color(kQPointColorsMap.at(flag));
         painter.setBrush(color);
-        QPen pen(qPointPenMap.at(flag));
+        QPen pen(kQPointPenMap.at(flag));
         pen.setColor(color);
         painter.setPen(pen);
         painter.drawPoints(qPointVectorMap[flag]);
@@ -300,7 +303,7 @@ void RenderArea::paintEvent(QPaintEvent *event)
 
     for(const auto& [pointKeyFlag, path] : qPointVectorMap)
     {
-        if (!(_polygonFlags & std::underlying_type_t<PolygonFlags>(pointKeyFlag)))
+        if (!(_pointFlags & std::underlying_type_t<PointFlags>(pointKeyFlag)))
             continue;
 
         drawPointVector(pointKeyFlag);
@@ -344,7 +347,7 @@ QRectF RenderArea::getChosenObjectsLimits() const
 
     for(const auto& [pointKeyFlag, path] : qPointVectorMap)
     {
-        if (!(_polygonFlags & std::underlying_type_t<PolygonFlags>(pointKeyFlag)))
+        if (!(_pointFlags & std::underlying_type_t<PointFlags>(pointKeyFlag)))
             continue;
 
         bounding |= getPointsBoundingRect(qPointVectorMap.at(pointKeyFlag));
