@@ -1,11 +1,13 @@
 QT += widgets gui
+CONFIG += c++1z
 requires(qtConfig(combobox))
 
 HEADERS       = renderarea.h                         \
                 window.h                             \
                 ..\mathpath-core\src\BiopsyTiler.h   \
                 ..\mathpath-core\src\clipper.hpp     \
-                ..\mathpath-core\src\Chronograph.h
+                ..\mathpath-core\src\Chronograph.h   \
+                ..\mathpath-core\src\BiopsyTilerMaps.h
 
 SOURCES       = main.cpp                             \
                 renderarea.cpp                       \

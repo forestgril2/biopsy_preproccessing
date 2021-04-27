@@ -57,26 +57,13 @@
 #include <QWidget>
 #include <QPainterPath>
 
+#include <BiopsyTilerMaps.h>
+
 class RenderArea : public QWidget
 {
     Q_OBJECT
 
 public:
-    enum PolygonFlags { Tumor               = 0x01,
-                        Control             = 0x02,
-                        Tissue              = 0x04,
-                        Necrosis            = 0x08,
-                        Exclude             = 0x10,
-                        TissueAndTumor      = 0x20,
-                        ExcludeAndNecrosis  = 0x40,
-                        Final               = 0x80
-                      };
-
-    enum MarkerFlags { NonProliferatingCD8 = 0x01,
-                       ProliferatingCD8    = 0x02,
-                       ProliferatingTumor  = 0x04}
-                     ;
-
     explicit RenderArea(QWidget *parent = nullptr);
 
     QSize minimumSizeHint() const override;
@@ -96,16 +83,16 @@ protected:
 private:
     QRectF getChosenObjectsLimits() const;
 
-    uint32_t _annotationFlags;
-    uint32_t _markerFlags;
+    uint32_t _polygonFlags;
+    uint32_t _pointFlags;
     QPen _pen;
     QBrush _brush;
     bool _antialiased;
     bool _fitToTotalLimits;
     QPixmap _pixmap;
 
-    std::map<std::string, QVector<QPointF>> qPointVectorMap;
-    std::map<std::string, QPainterPath> qPathsMap;
+    std::map<PointFlags, QVector<QPointF>> qPointVectorMap;
+    std::map<PolygonFlags, QPainterPath> qPathsMap;
     QRectF _totalLimits;
 };
 //! [0]

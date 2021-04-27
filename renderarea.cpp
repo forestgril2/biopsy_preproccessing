@@ -51,6 +51,7 @@
 #include "renderarea.h"
 
 #include <iostream>
+#include <type_traits>
 
 #include <QBrush>
 #include <QPainter>
@@ -58,6 +59,51 @@
 #include <QPainterPath>
 
 #include <BiopsyTiler.h>
+
+static const std::map<PolygonFlags, QColor> qPolygonPathColorsMap =
+{
+    {PolygonFlags::Tumor             , Qt::red},
+    {PolygonFlags::Control           , Qt::green},
+    {PolygonFlags::Tissue            , Qt::blue},
+    {PolygonFlags::Necrosis          , Qt::black},
+    {PolygonFlags::Exclude           , Qt::darkYellow},
+    {PolygonFlags::TissueAndTumor    , Qt::transparent},
+    {PolygonFlags::ExcludeOrNecrosis , Qt::transparent},
+    {PolygonFlags::Final             , Qt::green}
+};
+
+static const std::map<PolygonFlags, QPen> qPolygonPathPensMap =
+{
+    {PolygonFlags::Tumor             , QPen(Qt::black,   10,  Qt::SolidLine, Qt::RoundCap)},
+    {PolygonFlags::Control           , QPen(Qt::black,   10,  Qt::SolidLine, Qt::RoundCap)},
+    {PolygonFlags::Tissue            , QPen(Qt::black,   10,  Qt::SolidLine, Qt::RoundCap)},
+    {PolygonFlags::Necrosis          , QPen(Qt::black,   10,  Qt::SolidLine, Qt::RoundCap)},
+    {PolygonFlags::Exclude           , QPen(Qt::black,   10,  Qt::SolidLine, Qt::RoundCap)},
+    {PolygonFlags::TissueAndTumor    , QPen(Qt::black,   100, Qt::SolidLine, Qt::RoundCap)},
+    {PolygonFlags::ExcludeOrNecrosis , QPen(Qt::magenta, 75,  Qt::SolidLine, Qt::RoundCap)},
+    {PolygonFlags::Final             , QPen(Qt::green,   30,  Qt::SolidLine, Qt::RoundCap)}
+};
+
+static const std::map<PointFlags, QColor> qPointColorsMap =
+{
+    {PointFlags::NonProliferatingCD8  , Qt::blue},
+    {PointFlags::ProliferatingCD8     , Qt::cyan},
+    {PointFlags::ProliferatingTumor   , Qt::red},
+    {PointFlags::TumorFinal           , Qt::red},
+    {PointFlags::ImmuneProlifFinal    , Qt::cyan},
+    {PointFlags::ImmuneNonProlifFinal , Qt::blue},
+};
+
+
+static const std::map<PointFlags, QPen> qPointPenMap =
+{
+    {PointFlags::NonProliferatingCD8  , QPen(Qt::black, 50, Qt::SolidLine, Qt::RoundCap)},
+    {PointFlags::ProliferatingCD8     , QPen(Qt::black, 50, Qt::SolidLine, Qt::RoundCap)},
+    {PointFlags::ProliferatingTumor   , QPen(Qt::black, 50, Qt::SolidLine, Qt::RoundCap)},
+    {PointFlags::TumorFinal           , QPen(Qt::black, 50, Qt::SolidLine, Qt::RoundCap)},
+    {PointFlags::ImmuneProlifFinal    , QPen(Qt::black, 50, Qt::SolidLine, Qt::RoundCap)},
+    {PointFlags::ImmuneNonProlifFinal , QPen(Qt::black, 50, Qt::SolidLine, Qt::RoundCap)}
+};
 
 static QVector<QPointF> getQPointsF(const std::vector<bgPoint>& bgPoints)
 {
@@ -73,7 +119,7 @@ static QVector<QPointF> getQPointsF(const std::vector<bgPoint>& bgPoints)
 RenderArea::RenderArea(QWidget *parent)
     : QWidget(parent)
 {
-    _annotationFlags = Tumor;
+    _polygonFlags = std::underlying_type_t<PolygonFlags>(PolygonFlags::Tumor);
     _antialiased = false;
     _fitToTotalLimits = false;
     _pixmap.load(":/images/qt-logo.png");
@@ -90,20 +136,18 @@ RenderArea::RenderArea(QWidget *parent)
     _totalLimits.setRight(limits[2]);
     _totalLimits.setBottom(limits[1]);
 
-    const std::map<std::string, std::vector<bgPoint>*> pointsBgVectorMap = biopsyData.getBgPoints();
-    const std::map<std::string, std::vector<bgPolygon>*> polygonVectorMap = biopsyData.getBgPolygons();
+    const std::map<PointFlags, std::vector<bgPoint>>& pointsBgVectorMap = biopsyData.getBgPoints();
+    const std::map<PolygonFlags, std::vector<bgPolygon>>& polygonVectorMap = biopsyData.getBgPolygons();
 
-    for (const auto& pair : pointsBgVectorMap)
+    for (const auto& [flag, points] : pointsBgVectorMap)
     {
-        qPointVectorMap[pair.first] = getQPointsF(*pair.second);
-        std::cout << __FUNCTION__ << "  added markers: " << pair.first << ", with size: " << getQPointsF(*pair.second).size() << std::endl;
+        qPointVectorMap[flag] = getQPointsF(points);
+        std::cout << __FUNCTION__ << "  added markers: " << kPointTypeNamesToFlags.at(flag) << ", with size: " << points.size() << std::endl;
     }
 
-    for (const auto& pair : polygonVectorMap)
+    for (const auto& [flag, polygonsBg] : polygonVectorMap)
     {
-        const std::string annotation = pair.first;
-        const bgPolygons& polygonsBg = *pair.second;
-        std::cout << __FUNCTION__ << "  adding polygon vector annotation: " << annotation  << ", vector size: " << polygonsBg.size() << std::endl;
+        std::cout << __FUNCTION__ << "  adding polygon vector annotation: " << kPolygonTypeNamesToFlags.at(flag) << ", vector size: " << polygonsBg.size() << std::endl;
 
         QPainterPath paths;
         for(const bgPolygon& polygonBg : polygonsBg)
@@ -123,7 +167,7 @@ RenderArea::RenderArea(QWidget *parent)
                 paths.addPath(innerPath);
             }
         }
-        qPathsMap[annotation].swap(paths);
+        qPathsMap[flag].swap(paths);
     }
 }
 //! [0]
@@ -143,7 +187,7 @@ QSize RenderArea::sizeHint() const
 
 void RenderArea::setMarkers(uint32_t markers)
 {
-    this->_markerFlags = markers;
+    this->_pointFlags = markers;
     update();
 }
 //! [2]
@@ -151,7 +195,7 @@ void RenderArea::setMarkers(uint32_t markers)
 //! [3]
 void RenderArea::setAnnotation(uint32_t annotations)
 {
-    this->_annotationFlags = annotations;
+    this->_polygonFlags = annotations;
     update();
 }
 //! [3]
@@ -224,126 +268,55 @@ void RenderArea::paintEvent(QPaintEvent *event)
     painter.scale(scale.width(), scale.height());
     painter.translate(translate);
 
-    painter.setPen(QPen(Qt::black, 10, Qt::SolidLine, Qt::RoundCap));
-    if (_annotationFlags & Control)
-    {
-        QColor controlColor(Qt::green);
-        controlColor.setAlpha(128);
-        painter.setBrush(controlColor);
-        painter.drawPath(qPathsMap["control"]);
-    }
-    if (_annotationFlags & Tumor)
-    {
-        QColor tumorColor(Qt::red);
-        tumorColor.setAlpha(128);
-        painter.setBrush(tumorColor);
-        painter.drawPath(qPathsMap["tumor"]);
-    }
-    if (_annotationFlags & Tissue)
-    {
-        QColor tissueColor(Qt::blue);
-        tissueColor.setAlpha(128);
-        painter.setBrush(tissueColor);
-        painter.drawPath(qPathsMap["tissue"]);
-    }
-    if (_annotationFlags & Necrosis)
-    {
-        QColor necrosisColor(Qt::black);
-        necrosisColor.setAlpha(128);
-        painter.setBrush(necrosisColor);
-        painter.drawPath(qPathsMap["necrosis"]);
-    }
-    if (_annotationFlags & Exclude)
-    {
-        QColor excludeColor(Qt::darkYellow);
-        excludeColor.setAlpha(128);
-        painter.setBrush(excludeColor);
-        painter.drawPath(qPathsMap["exclude"]);
-    }
-
-    if (_markerFlags & NonProliferatingCD8)
-    {
-        QColor color(Qt::blue);
-        painter.setBrush(color);
-        painter.setPen(QPen(painter.brush(), 50, Qt::SolidLine, Qt::RoundCap));
-        painter.drawPoints(qPointVectorMap["MKI67- CD8A+"]);
-    }
-    if (_markerFlags & ProliferatingCD8)
-    {
-        QColor color(Qt::cyan);
-        painter.setBrush(color);
-        painter.setPen(QPen(painter.brush(), 50, Qt::SolidLine, Qt::RoundCap));
-        painter.drawPoints(qPointVectorMap["MKI67+ CD8A+"]);
-    }
-    if (_markerFlags & ProliferatingTumor)
-    {
-        QColor color(Qt::red);
-        painter.setBrush(color);
-        painter.setPen(QPen(painter.brush(), 50, Qt::SolidLine, Qt::RoundCap));
-        painter.drawPoints(qPointVectorMap["MKI67+ CD8A-"]);
-    }
-
-    painter.setRenderHint(QPainter::Antialiasing, false);
-    painter.setBrush(Qt::transparent);
-    if (_annotationFlags & TissueAndTumor)
-    {
-        painter.setPen(QPen(Qt::black, 100, Qt::SolidLine, Qt::RoundCap));
-        painter.drawPath(qPathsMap["TissueAndTumor"]);
-    }
-    if (_annotationFlags & ExcludeAndNecrosis)
-    {
-        painter.setPen(QPen(Qt::magenta, 75, Qt::SolidLine, Qt::RoundCap));
-        painter.drawPath(qPathsMap["ExcludeAndNecrosis"]);
-    }
-    if (_annotationFlags & Final)
-    {
-        painter.setBrush(Qt::green);
-        painter.setPen(QPen(Qt::black, 30, Qt::SolidLine, Qt::RoundCap));
-        painter.drawPath(qPathsMap["Final"]);
-    }
-
-
     painter.setRenderHint(QPainter::Antialiasing, false);
     painter.setPen(palette().dark().color());
     painter.setBrush(Qt::NoBrush);
     painter.drawRect(QRect(0, 0, width() - 1, height() - 1));
+
+    auto drawPolygon = [this, &painter](PolygonFlags flag) {
+        QColor controlColor(qPolygonPathColorsMap.at(flag));
+        painter.setPen(qPolygonPathPensMap.at(flag));
+        controlColor.setAlpha(128);
+        painter.setBrush(controlColor);
+        painter.drawPath(qPathsMap[flag]);
+    };
+
+    for(const auto& [polygonKeyFlag, path] : qPathsMap)
+    {
+        if (!(_polygonFlags & std::underlying_type_t<PolygonFlags>(polygonKeyFlag)))
+            continue;
+
+        drawPolygon(polygonKeyFlag);
+    }
+
+    auto drawPointVector = [this, &painter](PointFlags flag) {
+        const QColor color(qPointColorsMap.at(flag));
+        painter.setBrush(color);
+        QPen pen(qPointPenMap.at(flag));
+        pen.setColor(color);
+        painter.setPen(pen);
+        painter.drawPoints(qPointVectorMap[flag]);
+    };
+
+    for(const auto& [pointKeyFlag, path] : qPointVectorMap)
+    {
+        if (!(_polygonFlags & std::underlying_type_t<PolygonFlags>(pointKeyFlag)))
+            continue;
+
+        drawPointVector(pointKeyFlag);
+    }
 }
 
 QRectF RenderArea::getChosenObjectsLimits() const
 {
     QPainterPath chosenAnnotationPaths;
 
-    if (_annotationFlags & Tumor)
+    for(const auto& [polygonKeyFlag, path] : qPathsMap)
     {
-        chosenAnnotationPaths.addPath(qPathsMap.at("tumor"));
-    }
-    if (_annotationFlags & Control)
-    {
-        chosenAnnotationPaths.addPath(qPathsMap.at("control"));
-    }
-    if (_annotationFlags & Tissue)
-    {
-        chosenAnnotationPaths.addPath(qPathsMap.at("tissue"));
-    }
-    if (_annotationFlags & Necrosis)
-    {
-        chosenAnnotationPaths.addPath(qPathsMap.at("necrosis"));
-    }
-    if (_annotationFlags & Exclude)
-    {
-        chosenAnnotationPaths.addPath(qPathsMap.at("exclude"));
-    }
-    if (_annotationFlags & TissueAndTumor)
-    {
-        chosenAnnotationPaths.addPath(qPathsMap.at("TissueAndTumor"));
-    }
-    if (_annotationFlags & ExcludeAndNecrosis)
-    {
-        chosenAnnotationPaths.addPath(qPathsMap.at("ExcludeAndNecrosis"));
-    }
-    if (_annotationFlags & Final)
-    {
-        chosenAnnotationPaths.addPath(qPathsMap.at("Final"));
+        if (!(_polygonFlags & std::underlying_type_t<PolygonFlags>(polygonKeyFlag)))
+            continue;
+
+        chosenAnnotationPaths.addPath(qPathsMap.at(polygonKeyFlag));
     }
 
     QRectF bounding = chosenAnnotationPaths.boundingRect();
@@ -369,17 +342,12 @@ QRectF RenderArea::getChosenObjectsLimits() const
         return QRectF{QPointF{bbox[0], bbox[1]}, QPointF{bbox[2], bbox[3]}};
     };
 
-    if (_markerFlags & NonProliferatingCD8)
+    for(const auto& [pointKeyFlag, path] : qPointVectorMap)
     {
-        bounding |= getPointsBoundingRect(qPointVectorMap.at("MKI67- CD8A+"));
-    }
-    if (_markerFlags & ProliferatingCD8)
-    {
-        bounding |= getPointsBoundingRect(qPointVectorMap.at("MKI67+ CD8A+"));
-    }
-    if (_markerFlags & ProliferatingTumor)
-    {
-        bounding |= getPointsBoundingRect(qPointVectorMap.at("MKI67+ CD8A-"));
+        if (!(_polygonFlags & std::underlying_type_t<PolygonFlags>(pointKeyFlag)))
+            continue;
+
+        bounding |= getPointsBoundingRect(qPointVectorMap.at(pointKeyFlag));
     }
 
     return bounding;

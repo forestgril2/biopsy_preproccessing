@@ -48,10 +48,16 @@
 **
 ****************************************************************************/
 
+#include <type_traits>
+
+#include <QtWidgets>
+
+#include <BiopsyTilerMaps.h>
+
 #include "renderarea.h"
 #include "window.h"
 
-#include <QtWidgets>
+
 
 //! [0]
 const int IdRole = Qt::UserRole;
@@ -60,25 +66,6 @@ const int IdRole = Qt::UserRole;
 //! [1]
 //!
 
-
-static const std::map<std::string, RenderArea::PolygonFlags> kFlagsToAnnotations =
-{
-    {"Tissue"  ,              RenderArea::PolygonFlags::Tissue             },
-    {"Tumor"   ,              RenderArea::PolygonFlags::Tumor              },
-    {"Necrosis",              RenderArea::PolygonFlags::Necrosis           },
-    {"Control" ,              RenderArea::PolygonFlags::Control            },
-    {"Exclude" ,              RenderArea::PolygonFlags::Exclude            },
-    {"Tissue and Tumor" ,     RenderArea::PolygonFlags::TissueAndTumor     },
-    {"Exclude and Necrosis" , RenderArea::PolygonFlags::ExcludeAndNecrosis },
-    {"Final" ,                RenderArea::PolygonFlags::Final              },
-};
-
-static const std::map<std::string, RenderArea::MarkerFlags> kFlagsToMarkers =
-{
-    {"CD8 prolif."    , RenderArea::MarkerFlags::ProliferatingCD8},
-    {"CD8 non-prolif.", RenderArea::MarkerFlags::NonProliferatingCD8   },
-    {"Tumor prolif."  , RenderArea::MarkerFlags::ProliferatingTumor }
-};
 Window::Window()
 {
     renderArea = new RenderArea;
@@ -86,12 +73,12 @@ Window::Window()
     {
         annotationCheckboxes = new QWidget;
         annotationCheckboxes->setLayout(new QGridLayout);
-        for(const auto& pair : kFlagsToAnnotations)
+        for(const auto& [key, typeString] : kPolygonTypeNamesToFlags)
         {
-            QCheckBox* box = new QCheckBox(tr(pair.first.c_str()));
+            QCheckBox* box = new QCheckBox(tr(typeString.c_str()));
             connect(box, &QCheckBox::stateChanged, this, &Window::onAnnotationsChanged);
             annotationCheckboxes->layout()->addWidget(box);
-            box->setChecked(pair.second != RenderArea::PolygonFlags::Control);
+            box->setChecked(key != PolygonFlags::Control);
         }
 
         annotationsLabel = new QLabel(tr("&Annotations:"));
@@ -101,9 +88,9 @@ Window::Window()
     {
         markerCheckboxes = new QWidget;
         markerCheckboxes->setLayout(new QGridLayout);
-        for(const auto& pair : kFlagsToMarkers)
+        for(const auto& [key, typeString] : kPointTypeNamesToFlags)
         {
-            QCheckBox* box = new QCheckBox(tr(pair.first.c_str()));
+            QCheckBox* box = new QCheckBox(tr(typeString.c_str()));
             connect(box, &QCheckBox::stateChanged, this, &Window::onMarkersChanged);
             markerCheckboxes->layout()->addWidget(box);
             box->setChecked(true);
@@ -244,36 +231,36 @@ Window::Window()
 //! [11]
 void Window::onAnnotationsChanged()
 {
-    uint32_t annotationFlags = 0;
+    std::underlying_type_t<PolygonFlags> annotationFlags = 0;
     for(uint32_t itemIndex=0; itemIndex<uint32_t(annotationCheckboxes->layout()->count()); ++itemIndex)
     {
         QCheckBox* box = dynamic_cast<QCheckBox*>(annotationCheckboxes->layout()->itemAt(itemIndex)->widget());
         if (!box || box->checkState() != Qt::Checked)
             continue;
 
-        if (kFlagsToAnnotations.end() == kFlagsToAnnotations.find(box->text().toStdString()))
-            continue;
+        const auto pair = findStringValue(kPolygonTypeNamesToFlags, box->text().toStdString());
+        assert(pair.first != PolygonFlags::None);
 
-        annotationFlags |= kFlagsToAnnotations.at(box->text().toStdString());
+        annotationFlags |= std::underlying_type_t<PolygonFlags>(pair.first);
     }
     renderArea->setAnnotation(annotationFlags);
 }
 
 void Window::onMarkersChanged()
 {
-    uint32_t markerFlags = 0;
+    uint32_t pointTypeFlags = 0;
     for(uint32_t itemIndex=0; itemIndex<uint32_t(markerCheckboxes->layout()->count()); ++itemIndex)
     {
         QCheckBox* box = dynamic_cast<QCheckBox*>(markerCheckboxes->layout()->itemAt(itemIndex)->widget());
         if (!box || box->checkState() != Qt::Checked)
             continue;
 
-        if (kFlagsToMarkers.end() == kFlagsToMarkers.find(box->text().toStdString()))
-            continue;
+        const auto pair = findStringValue(kPointTypeNamesToFlags, box->text().toStdString());
+        assert(pair.first != PointFlags::None);
 
-        markerFlags |= kFlagsToMarkers.at(box->text().toStdString());
+        pointTypeFlags |= std::underlying_type_t<PointFlags>(pair.first);
     }
-    renderArea->setMarkers(markerFlags);
+    renderArea->setMarkers(pointTypeFlags);
 }
 //! [11]
 
