@@ -120,6 +120,16 @@ static QVector<QPointF> getQPointsF(const std::vector<bgPoint>& bgPoints)
     return newPoints;
 }
 
+static QRectF getQRectFromBBox(const BBox<double>& limits)
+{
+    QRectF converted;
+    converted.setLeft(limits[0]);
+    converted.setTop(limits[3]);
+    converted.setRight(limits[2]);
+    converted.setBottom(limits[1]);
+    return converted;
+}
+
 RenderArea::RenderArea(QWidget *parent)
     : QWidget(parent)
 {
@@ -133,12 +143,7 @@ RenderArea::RenderArea(QWidget *parent)
 
     const BiopsyTiler biopsyData;
 
-    BBox<double> limits = biopsyData.getTotalLimits();
-
-    _totalLimits.setLeft(limits[0]);
-    _totalLimits.setTop(limits[3]);
-    _totalLimits.setRight(limits[2]);
-    _totalLimits.setBottom(limits[1]);
+    _totalLimits = getQRectFromBBox(biopsyData.getTotalLimits());
 
     const std::map<PointFlags, std::vector<bgPoint>>& pointsBgVectorMap = biopsyData.getBgPoints();
     const std::map<PolygonFlags, std::vector<bgPolygon>>& polygonVectorMap = biopsyData.getBgPolygons();
@@ -172,6 +177,11 @@ RenderArea::RenderArea(QWidget *parent)
             }
         }
         qPathsMap[flag].swap(paths);
+    }
+
+    for (const BBox<double>& box : biopsyData.getTiles())
+    {
+        _tiles.push_back(getQRectFromBBox(box));
     }
 }
 //! [0]
@@ -307,6 +317,13 @@ void RenderArea::paintEvent(QPaintEvent *event)
             continue;
 
         drawPointVector(pointKeyFlag);
+    }
+
+    painter.setPen(kBasePointPen);
+    painter.setBrush(Qt::transparent);
+    for(const QRectF& tile: _tiles)
+    {
+        painter.drawRect(tile);
     }
 }
 

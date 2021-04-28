@@ -94,6 +94,7 @@ private:
     std::map<PointFlags, QVector<QPointF>> qPointVectorMap;
     std::map<PolygonFlags, QPainterPath> qPathsMap;
     QRectF _totalLimits;
+    std::vector<QRectF> _tiles;
 };
 //! [0]
 
