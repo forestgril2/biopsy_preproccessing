@@ -49,6 +49,7 @@
 ****************************************************************************/
 
 #include <type_traits>
+#include <set>
 
 #include <QtWidgets>
 
@@ -63,8 +64,13 @@
 const int IdRole = Qt::UserRole;
 //! [0]
 
-//! [1]
-//!
+
+static const std::set<PolygonFlags> kFlagsWitchCheckboxesChecked =
+{
+    PolygonFlags::ConflictingBg,
+    PolygonFlags::ConflictingCl,
+    PolygonFlags::ConflictingTiles
+};
 
 Window::Window()
 {
@@ -78,7 +84,7 @@ Window::Window()
             QCheckBox* box = new QCheckBox(tr(typeString.c_str()));
             connect(box, &QCheckBox::stateChanged, this, &Window::onAnnotationsChanged);
             annotationCheckboxes->layout()->addWidget(box);
-            box->setChecked(key != PolygonFlags::Control);
+            box->setChecked(kFlagsWitchCheckboxesChecked.end() != kFlagsWitchCheckboxesChecked.find(key));
         }
 
         annotationsLabel = new QLabel(tr("&Annotations:"));
@@ -93,7 +99,7 @@ Window::Window()
             QCheckBox* box = new QCheckBox(tr(typeString.c_str()));
             connect(box, &QCheckBox::stateChanged, this, &Window::onMarkersChanged);
             markerCheckboxes->layout()->addWidget(box);
-            box->setChecked(true);
+            box->setChecked(false);
         }
 
         markersLabel = new QLabel(tr("&Markers:"));
@@ -103,12 +109,12 @@ Window::Window()
 //! [1]
 
 //! [2]
-    penWidthSpinBox = new QSpinBox;
-    penWidthSpinBox->setRange(0, 20);
-    penWidthSpinBox->setSpecialValueText(tr("0 (cosmetic pen)"));
+    conflictTileNoBox = new QSpinBox;
+    conflictTileNoBox->setRange(-1, renderArea->getConflictingTilesNumber() -1);
+    conflictTileNoBox->setSpecialValueText(tr("Conflict tile No."));
 
-    penWidthLabel = new QLabel(tr("Pen &Width:"));
-    penWidthLabel->setBuddy(penWidthSpinBox);
+    conflictTileLabel = new QLabel(tr("Conflict &Label:"));
+    conflictTileLabel->setBuddy(conflictTileNoBox);
 //! [2]
 
 //! [3]
@@ -180,8 +186,8 @@ Window::Window()
 //! [8]
 //    connect(annotationCheckboxes, QOverload<int>::of(&QComboBox::activated),
 //            this, &Window::onAnnotationsChanged);
-    connect(penWidthSpinBox, QOverload<int>::of(&QSpinBox::valueChanged),
-            this, &Window::penChanged);
+    connect(conflictTileNoBox, QOverload<int>::of(&QSpinBox::valueChanged),
+            this, &Window::conflictingTileChanged);
     connect(penStyleComboBox, QOverload<int>::of(&QComboBox::activated),
             this, &Window::penChanged);
     connect(penCapComboBox, QOverload<int>::of(&QComboBox::activated),
@@ -205,8 +211,8 @@ Window::Window()
     mainLayout->addWidget(annotationsLabel, 2, 0, Qt::AlignRight);
     mainLayout->addWidget(annotationCheckboxes, 2, 1);
     mainLayout->addWidget(markerCheckboxes, 2, 2);
-    mainLayout->addWidget(penWidthLabel, 3, 0, Qt::AlignRight);
-    mainLayout->addWidget(penWidthSpinBox, 3, 1);
+    mainLayout->addWidget(conflictTileLabel, 3, 0, Qt::AlignRight);
+    mainLayout->addWidget(conflictTileNoBox, 3, 1);
     mainLayout->addWidget(penStyleLabel, 4, 0, Qt::AlignRight);
     mainLayout->addWidget(penStyleComboBox, 4, 1);
     mainLayout->addWidget(penCapLabel, 3, 2, Qt::AlignRight);
@@ -262,12 +268,17 @@ void Window::onMarkersChanged()
     }
     renderArea->setMarkers(pointTypeFlags);
 }
+
+void Window::conflictingTileChanged()
+{
+    renderArea->setConflictingTile(conflictTileNoBox->value());
+}
 //! [11]
 
 //! [12]
 void Window::penChanged()
 {
-    int width = penWidthSpinBox->value();
+    int width = 10;
     Qt::PenStyle style = Qt::PenStyle(penStyleComboBox->itemData(
             penStyleComboBox->currentIndex(), IdRole).toInt());
     Qt::PenCapStyle cap = Qt::PenCapStyle(penCapComboBox->itemData(

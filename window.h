@@ -73,23 +73,25 @@ public:
 private slots:
     void onAnnotationsChanged();
     void onMarkersChanged();
+    void conflictingTileChanged();
     void penChanged();
     void brushChanged();
 
 private:
     RenderArea *renderArea;
-
+    QSpinBox *conflictTileNoBox;
     QLabel *markersLabel;
     QLabel *annotationsLabel;
-    QLabel *penWidthLabel;
+    QWidget *annotationCheckboxes;
+    QWidget *markerCheckboxes;
+
+
+    QLabel *conflictTileLabel;
     QLabel *penStyleLabel;
     QLabel *penCapLabel;
     QLabel *penJoinLabel;
     QLabel *brushStyleLabel;
     QLabel *otherOptionsLabel;
-    QWidget *annotationCheckboxes;
-    QWidget *markerCheckboxes;
-    QSpinBox *penWidthSpinBox;
     QComboBox *penStyleComboBox;
     QComboBox *penCapComboBox;
     QComboBox *penJoinComboBox;

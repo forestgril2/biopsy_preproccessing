@@ -69,7 +69,10 @@ static const std::map<PolygonFlags, QColor> kQPolygonPathColorsMap =
     {PolygonFlags::Exclude           , Qt::darkYellow},
     {PolygonFlags::TissueAndTumor    , Qt::transparent},
     {PolygonFlags::ExcludeOrNecrosis , Qt::transparent},
-    {PolygonFlags::Final             , Qt::green}
+    {PolygonFlags::Final             , Qt::green},
+    {PolygonFlags::ConflictingBg     , Qt::transparent},
+    {PolygonFlags::ConflictingCl     , Qt::transparent},
+    {PolygonFlags::ConflictingTiles  , Qt::transparent},
 };
 
 static const Qt::PenStyle kBasePenStyle = Qt::SolidLine;
@@ -77,14 +80,17 @@ static const Qt::PenCapStyle kBasePenCapStyle = Qt::RoundCap;
 
 static const std::map<PolygonFlags, QPen> kQPolygonPathPensMap =
 {
-    {PolygonFlags::Tumor             , QPen(Qt::black,   10,  kBasePenStyle, kBasePenCapStyle)},
-    {PolygonFlags::Control           , QPen(Qt::black,   10,  kBasePenStyle, kBasePenCapStyle)},
-    {PolygonFlags::Tissue            , QPen(Qt::black,   10,  kBasePenStyle, kBasePenCapStyle)},
-    {PolygonFlags::Necrosis          , QPen(Qt::black,   10,  kBasePenStyle, kBasePenCapStyle)},
-    {PolygonFlags::Exclude           , QPen(Qt::black,   10,  kBasePenStyle, kBasePenCapStyle)},
-    {PolygonFlags::TissueAndTumor    , QPen(Qt::black,   100, kBasePenStyle, kBasePenCapStyle)},
-    {PolygonFlags::ExcludeOrNecrosis , QPen(Qt::magenta, 75,  kBasePenStyle, kBasePenCapStyle)},
-    {PolygonFlags::Final             , QPen(Qt::green,   30,  kBasePenStyle, kBasePenCapStyle)}
+    {PolygonFlags::Tumor             , QPen(Qt::black,   1,   kBasePenStyle, kBasePenCapStyle)},
+    {PolygonFlags::Control           , QPen(Qt::black,   1,   kBasePenStyle, kBasePenCapStyle)},
+    {PolygonFlags::Tissue            , QPen(Qt::black,   1,   kBasePenStyle, kBasePenCapStyle)},
+    {PolygonFlags::Necrosis          , QPen(Qt::black,   1,   kBasePenStyle, kBasePenCapStyle)},
+    {PolygonFlags::Exclude           , QPen(Qt::black,   1,   kBasePenStyle, kBasePenCapStyle)},
+    {PolygonFlags::TissueAndTumor    , QPen(Qt::black,   1,   kBasePenStyle, kBasePenCapStyle)},
+    {PolygonFlags::ExcludeOrNecrosis , QPen(Qt::magenta, 1,   kBasePenStyle, kBasePenCapStyle)},
+    {PolygonFlags::Final             , QPen(Qt::yellow,  10,  kBasePenStyle, kBasePenCapStyle)},
+    {PolygonFlags::ConflictingBg     , QPen(Qt::green,   10,  kBasePenStyle, kBasePenCapStyle)},
+    {PolygonFlags::ConflictingCl     , QPen(Qt::blue,    10,  kBasePenStyle, kBasePenCapStyle)},
+    {PolygonFlags::ConflictingTiles  , QPen(Qt::black,   10,  kBasePenStyle, kBasePenCapStyle)}
 };
 
 static const std::map<PointFlags, QColor> kQPointColorsMap =
@@ -148,6 +154,13 @@ RenderArea::RenderArea(QWidget *parent)
     const std::map<PointFlags, std::vector<bgPoint>>& pointsBgVectorMap = biopsyData.getBgPoints();
     const std::map<PolygonFlags, std::vector<bgPolygon>>& polygonVectorMap = biopsyData.getBgPolygons();
 
+    const std::vector<bgPolygon>& conflictingTiles = polygonVectorMap.at(PolygonFlags::ConflictingTiles);
+    _numConflictingTiles = conflictingTiles.size();
+    for (const bgPolygon& tile : conflictingTiles)
+    {
+        _conflictingTileLimits.push_back(getQRectFromBBox(BiopsyTiler::getBgPolygonLimits(tile)));
+    }
+
     for (const auto& [flag, points] : pointsBgVectorMap)
     {
         qPointVectorMap[flag] = getQPointsF(points);
@@ -183,6 +196,7 @@ RenderArea::RenderArea(QWidget *parent)
     {
         _tiles.push_back(getQRectFromBBox(box));
     }
+
 }
 //! [0]
 
@@ -244,6 +258,17 @@ void RenderArea::setFittedToTotalLmits(bool fitted)
     this->_fitToTotalLimits = fitted;
     update();
 }
+
+uint32_t RenderArea::getConflictingTilesNumber() const
+{
+    return _numConflictingTiles;
+}
+
+void RenderArea::setConflictingTile(int32_t number)
+{
+    _currentConflictingTile = number;
+    update();
+}
 //! [7]
 
 //! [8]
@@ -266,7 +291,15 @@ void RenderArea::paintEvent(QPaintEvent *event)
     }
     else
     {
-        const QRectF limits = getChosenObjectsLimits();
+        QRectF limits = getChosenObjectsLimits();
+        if (_currentConflictingTile >= 0)
+        {
+            limits = getCurrentConflictingTileLimits();
+        }
+        else
+        {
+            limits = getChosenObjectsLimits();
+        }
 
         QRectF flippedLimits;
         flippedLimits.setLeft(limits.left());
@@ -283,8 +316,8 @@ void RenderArea::paintEvent(QPaintEvent *event)
     painter.translate(translate);
 
     painter.setRenderHint(QPainter::Antialiasing, false);
-    painter.setPen(palette().dark().color());
-    painter.drawRect(QRect(0, 0, width() - 1, height() - 1));
+//    painter.setPen(palette().dark().color());
+//    painter.drawRect(QRect(0, 0, width() - 1, height() - 1));
 
     auto drawPolygon = [this, &painter](PolygonFlags flag) {
         QColor controlColor(kQPolygonPathColorsMap.at(flag));
@@ -372,4 +405,8 @@ QRectF RenderArea::getChosenObjectsLimits() const
 
     return bounding;
 }
-//! [13]
+
+const QRectF& RenderArea::getCurrentConflictingTileLimits() const
+{
+    return _conflictingTileLimits[_currentConflictingTile];
+}

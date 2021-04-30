@@ -77,11 +77,15 @@ public slots:
     void setAntialiased(bool antialiased);
     void setFittedToTotalLmits(bool fitted);
 
+    uint32_t getConflictingTilesNumber() const;
+    void setConflictingTile(int32_t number);
+
 protected:
     void paintEvent(QPaintEvent *event) override;
 
 private:
     QRectF getChosenObjectsLimits() const;
+    const QRectF& getCurrentConflictingTileLimits() const;
 
     uint32_t _polygonFlags;
     uint32_t _pointFlags;
@@ -95,6 +99,10 @@ private:
     std::map<PolygonFlags, QPainterPath> qPathsMap;
     QRectF _totalLimits;
     std::vector<QRectF> _tiles;
+    uint32_t _numConflictingTiles = 0;
+    int32_t _currentConflictingTile = -1;
+
+    std::vector<QRectF> _conflictingTileLimits;
 };
 //! [0]
 
