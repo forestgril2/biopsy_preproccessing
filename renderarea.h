@@ -83,7 +83,7 @@ public slots:
 protected:
     void paintEvent(QPaintEvent *event) override;
 
-private:
+private:    
     QRectF getChosenObjectsLimits() const;
     const QRectF& getCurrentConflictingTileLimits() const;
 

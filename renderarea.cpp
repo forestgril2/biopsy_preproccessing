@@ -60,6 +60,28 @@
 
 #include <BiopsyTiler.h>
 
+static QRectF getPointsBoundingRect(const QVector<QPointF>& points)
+{
+    BBox<qreal> bbox;
+    const uint32_t limits = (uint32_t)points.size() -1;
+    for(uint32_t i=0; i<limits; i+=2)
+    {
+        bbox.resize(BBox<qreal>({points[i   ].x(),
+                                 points[i   ].y(),
+                                 points[i +1].x(),
+                                 points[i +1].y()}));
+    }
+
+    if (0 != points.size() % 2)
+    {//Get last box for already included point ana a last one, which is odd.
+        bbox.resize(BBox<qreal>({points[limits -2].x(),
+                                 points[limits -2].y(),
+                                 points[limits -1].x(),
+                                 points[limits -1].y()}));
+    }
+    return QRectF{QPointF{bbox[0], bbox[1]}, QPointF{bbox[2], bbox[3]}};
+};
+
 static const std::map<PolygonFlags, QColor> kQPolygonPathColorsMap =
 {
     {PolygonFlags::Tumor             , Qt::red},
@@ -72,6 +94,7 @@ static const std::map<PolygonFlags, QColor> kQPolygonPathColorsMap =
     {PolygonFlags::Final             , Qt::green},
     {PolygonFlags::ConflictingBg     , Qt::transparent},
     {PolygonFlags::ConflictingCl     , Qt::transparent},
+    {PolygonFlags::ConflictingSh     , Qt::transparent},
     {PolygonFlags::ConflictingTiles  , Qt::transparent},
 };
 
@@ -87,10 +110,11 @@ static const std::map<PolygonFlags, QPen> kQPolygonPathPensMap =
     {PolygonFlags::Exclude           , QPen(Qt::black,   1,   kBasePenStyle, kBasePenCapStyle)},
     {PolygonFlags::TissueAndTumor    , QPen(Qt::black,   1,   kBasePenStyle, kBasePenCapStyle)},
     {PolygonFlags::ExcludeOrNecrosis , QPen(Qt::magenta, 1,   kBasePenStyle, kBasePenCapStyle)},
-    {PolygonFlags::Final             , QPen(Qt::yellow,  10,  kBasePenStyle, kBasePenCapStyle)},
-    {PolygonFlags::ConflictingBg     , QPen(Qt::green,   10,  kBasePenStyle, kBasePenCapStyle)},
-    {PolygonFlags::ConflictingCl     , QPen(Qt::blue,    10,  kBasePenStyle, kBasePenCapStyle)},
-    {PolygonFlags::ConflictingTiles  , QPen(Qt::black,   10,  kBasePenStyle, kBasePenCapStyle)}
+    {PolygonFlags::Final             , QPen(Qt::yellow,  1,  kBasePenStyle, kBasePenCapStyle)},
+    {PolygonFlags::ConflictingBg     , QPen(Qt::red,     1,   kBasePenStyle, kBasePenCapStyle)},
+    {PolygonFlags::ConflictingCl     , QPen(Qt::blue,    1,   kBasePenStyle, kBasePenCapStyle)},
+    {PolygonFlags::ConflictingSh     , QPen(Qt::red,     1,   kBasePenStyle, kBasePenCapStyle)},
+    {PolygonFlags::ConflictingTiles  , QPen(Qt::black,   1,   kBasePenStyle, kBasePenCapStyle)}
 };
 
 static const std::map<PointFlags, QColor> kQPointColorsMap =
@@ -103,7 +127,7 @@ static const std::map<PointFlags, QColor> kQPointColorsMap =
     {PointFlags::ImmuneNonProlifFinal , Qt::blue},
 };
 
-static const QPen kBasePointPen = QPen(Qt::black, 50, Qt::SolidLine, Qt::RoundCap);
+static const QPen kBasePointPen = QPen(Qt::black, 1, Qt::SolidLine, Qt::RoundCap);
 
 static const std::map<PointFlags, QPen> kQPointPenMap =
 {
@@ -154,11 +178,14 @@ RenderArea::RenderArea(QWidget *parent)
     const std::map<PointFlags, std::vector<bgPoint>>& pointsBgVectorMap = biopsyData.getBgPoints();
     const std::map<PolygonFlags, std::vector<bgPolygon>>& polygonVectorMap = biopsyData.getBgPolygons();
 
-    const std::vector<bgPolygon>& conflictingTiles = polygonVectorMap.at(PolygonFlags::ConflictingTiles);
-    _numConflictingTiles = conflictingTiles.size();
-    for (const bgPolygon& tile : conflictingTiles)
+    if (polygonVectorMap.end() != polygonVectorMap.find(PolygonFlags::ConflictingTiles))
     {
-        _conflictingTileLimits.push_back(getQRectFromBBox(BiopsyTiler::getBgPolygonLimits(tile)));
+        const std::vector<bgPolygon>& conflictingTiles = polygonVectorMap.at(PolygonFlags::ConflictingTiles);
+        _numConflictingTiles = conflictingTiles.size();
+        for (const bgPolygon& tile : conflictingTiles)
+        {
+            _conflictingTileLimits.push_back(getQRectFromBBox(BiopsyTiler::calculateBgPolygonLimits(tile)));
+        }
     }
 
     for (const auto& [flag, points] : pointsBgVectorMap)
@@ -169,6 +196,8 @@ RenderArea::RenderArea(QWidget *parent)
 
     for (const auto& [flag, polygonsBg] : polygonVectorMap)
     {
+        //TODO: This check should not be necessary:
+        enumFlagCheck(kPolygonTypeNamesToFlags, flag);
         std::cout << __FUNCTION__ << "  adding polygon vector annotation: " << kPolygonTypeNamesToFlags.at(flag) << ", vector size: " << polygonsBg.size() << std::endl;
 
         QPainterPath paths;
@@ -373,27 +402,6 @@ QRectF RenderArea::getChosenObjectsLimits() const
     }
 
     QRectF bounding = chosenAnnotationPaths.boundingRect();
-
-    auto getPointsBoundingRect = [](const QVector<QPointF>& points) {
-        BBox<qreal> bbox;
-        const uint32_t limits = (uint32_t)points.size() -1;
-        for(uint32_t i=0; i<limits; i+=2)
-        {
-            bbox.resize(BBox<qreal>({points[i   ].x(),
-                                     points[i   ].y(),
-                                     points[i +1].x(),
-                                     points[i +1].y()}));
-        }
-
-        if (0 != points.size() % 2)
-        {//Get last box for already included point ana a last one, which is odd.
-            bbox.resize(BBox<qreal>({points[limits -2].x(),
-                                     points[limits -2].y(),
-                                     points[limits -1].x(),
-                                     points[limits -1].y()}));
-        }
-        return QRectF{QPointF{bbox[0], bbox[1]}, QPointF{bbox[2], bbox[3]}};
-    };
 
     for(const auto& [pointKeyFlag, path] : qPointVectorMap)
     {
