@@ -5,22 +5,25 @@ requires(qtConfig(combobox))
 HEADERS       = renderarea.h                              \
                 window.h                                  \
                 ..\mathpath-core\src\BiopsyTiler.h        \
+                ..\mathpath-core\src\BiopsyTilerMaps.h    \
                 ..\mathpath-core\src\clipper.hpp          \
                 ..\mathpath-core\src\Cell2D.h             \
                 ..\mathpath-core\src\CellOccupationGrid.h \
                 ..\mathpath-core\src\CellSystem.h         \
                 ..\mathpath-core\src\Chronograph.h        \
-                ..\mathpath-core\src\BiopsyTilerMaps.h
+                ..\mathpath-core\src\Random.h
 
 SOURCES       = main.cpp                                    \
                 renderarea.cpp                              \
+                window.cpp                                  \
                 ..\mathpath-core\src\BiopsyTiler.cpp        \
                 ..\mathpath-core\src\Cell2D.cpp             \
                 ..\mathpath-core\src\CellOccupationGrid.cpp \
                 ..\mathpath-core\src\CellSystem.cpp         \
                 ..\mathpath-core\src\clipper.cpp            \
                 ..\mathpath-core\src\Chronograph.cpp        \
-                window.cpp
+                ..\mathpath-core\src\Random.cpp
+
 RESOURCES     = basicdrawing.qrc
 
 INCLUDEPATH = ..\mathpath-core\src     \

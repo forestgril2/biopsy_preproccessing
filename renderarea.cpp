@@ -91,7 +91,7 @@ static const std::map<PolygonFlags, QColor> kQPolygonPathColorsMap =
     {PolygonFlags::Exclude           , Qt::darkYellow},
     {PolygonFlags::TissueAndTumor    , Qt::transparent},
     {PolygonFlags::ExcludeOrNecrosis , Qt::transparent},
-    {PolygonFlags::Final             , Qt::green},
+    {PolygonFlags::Final             , Qt::darkGray},
     {PolygonFlags::ConflictingBg     , Qt::transparent},
     {PolygonFlags::ConflictingCl     , Qt::transparent},
     {PolygonFlags::ConflictingSh     , Qt::transparent},
@@ -122,19 +122,19 @@ static const std::map<PointFlags, QColor> kQPointColorsMap =
     {PointFlags::NonProliferatingCD8  , Qt::blue},
     {PointFlags::ProliferatingCD8     , Qt::cyan},
     {PointFlags::ProliferatingTumor   , Qt::red},
-    {PointFlags::TumorFinal           , Qt::red},
+    {PointFlags::TumorProlifFinal     , Qt::red},
     {PointFlags::ImmuneProlifFinal    , Qt::cyan},
     {PointFlags::ImmuneNonProlifFinal , Qt::blue},
 };
 
-static const QPen kBasePointPen = QPen(Qt::black, 1, Qt::SolidLine, Qt::RoundCap);
+static const QPen kBasePointPen = QPen(Qt::black, 10, Qt::SolidLine, Qt::RoundCap);
 
 static const std::map<PointFlags, QPen> kQPointPenMap =
 {
     {PointFlags::NonProliferatingCD8  , kBasePointPen},
     {PointFlags::ProliferatingCD8     , kBasePointPen},
     {PointFlags::ProliferatingTumor   , kBasePointPen},
-    {PointFlags::TumorFinal           , kBasePointPen},
+    {PointFlags::TumorProlifFinal     , kBasePointPen},
     {PointFlags::ImmuneProlifFinal    , kBasePointPen},
     {PointFlags::ImmuneNonProlifFinal , kBasePointPen}
 };
