@@ -2,6 +2,9 @@ QT += widgets gui
 CONFIG += c++1z
 requires(qtConfig(combobox))
 
+#DEFINES += NDEBUG
+DEFINES += DEBUG_REPEATING_OCCUPATION_INDEXES
+
 HEADERS       = renderarea.h                              \
                 window.h                                  \
                 ..\mathpath-core\src\BiopsyTiler.h        \
@@ -10,6 +13,7 @@ HEADERS       = renderarea.h                              \
                 ..\mathpath-core\src\Cell2D.h             \
                 ..\mathpath-core\src\CellOccupationGrid.h \
                 ..\mathpath-core\src\CellSystem.h         \
+                ..\mathpath-core\src\CellSystemParams.h   \
                 ..\mathpath-core\src\Chronograph.h        \
                 ..\mathpath-core\src\Random.h
 
@@ -20,6 +24,7 @@ SOURCES       = main.cpp                                    \
                 ..\mathpath-core\src\Cell2D.cpp             \
                 ..\mathpath-core\src\CellOccupationGrid.cpp \
                 ..\mathpath-core\src\CellSystem.cpp         \
+                ..\mathpath-core\src\CellSystemParams.cpp   \
                 ..\mathpath-core\src\clipper.cpp            \
                 ..\mathpath-core\src\Chronograph.cpp        \
                 ..\mathpath-core\src\Random.cpp
