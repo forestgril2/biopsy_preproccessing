@@ -106,6 +106,14 @@ Window::Window()
         markersLabel->setBuddy(markerCheckboxes);
     }
 
+    tumorGridCellsCheckBox = new QCheckBox("Tumor grid cells");
+    tumorGridCellsCheckBox->setChecked(false);
+    connect(tumorGridCellsCheckBox, &QCheckBox::stateChanged, this, &Window::onTumorGridCellsVisibilityChanged);
+
+    immuneGridCellsCheckBox = new QCheckBox("Immune  grid cells");
+    immuneGridCellsCheckBox->setChecked(false);
+    connect(immuneGridCellsCheckBox, &QCheckBox::stateChanged, this, &Window::onImmuneGridCellsVisibilityChanged);
+
 //! [1]
 
 //! [2]
@@ -214,20 +222,22 @@ Window::Window()
 //! [9] //! [10]
     mainLayout->setRowStretch(0, 1);
 
-    mainLayout->addWidget(renderArea,            0, 0, 1, 3);
+    mainLayout->addWidget(renderArea,               0, 0, 1, 3);
 
-    mainLayout->addWidget(annotationsLabel,      2, 0, 1, 1, Qt::AlignBottom | Qt::AlignCenter);
-    mainLayout->addWidget(annotationCheckboxes,  3, 0, 4, 1, Qt::AlignTop    | Qt::AlignCenter);
+    mainLayout->addWidget(annotationsLabel,         2, 0, 1, 1, Qt::AlignBottom | Qt::AlignCenter);
+    mainLayout->addWidget(annotationCheckboxes,     3, 0, 4, 1, Qt::AlignTop    | Qt::AlignCenter);
 
-    mainLayout->addWidget(markerCheckboxes,      2, 1, 5, 1, Qt::AlignCenter);
+    mainLayout->addWidget(markerCheckboxes,         2, 1, 2, 1, Qt::AlignCenter);
+    mainLayout->addWidget(tumorGridCellsCheckBox,   4, 1, 1, 1, Qt::AlignBottom | Qt::AlignCenter);
+    mainLayout->addWidget(immuneGridCellsCheckBox,  5, 1, 1, 1, Qt::AlignTop    | Qt::AlignCenter);
 
-    mainLayout->addWidget(conflictTileLabel,     2, 2, 1, 1, Qt::AlignBottom | Qt::AlignCenter);
-    mainLayout->addWidget(conflictTileNumberBox, 3, 2, 1, 1, Qt::AlignTop    | Qt::AlignCenter);
+    mainLayout->addWidget(conflictTileLabel,        2, 2, 1, 1, Qt::AlignBottom | Qt::AlignCenter);
+    mainLayout->addWidget(conflictTileNumberBox,    3, 2, 1, 1, Qt::AlignTop    | Qt::AlignCenter);
 
-    mainLayout->addWidget(tileLabel,             4, 2, 1, 1, Qt::AlignBottom | Qt::AlignCenter);
-    mainLayout->addWidget(tileNumberBox,         5, 2, 1, 1, Qt::AlignTop    | Qt::AlignCenter);
+    mainLayout->addWidget(tileLabel,                4, 2, 1, 1, Qt::AlignBottom | Qt::AlignCenter);
+    mainLayout->addWidget(tileNumberBox,            5, 2, 1, 1, Qt::AlignTop    | Qt::AlignCenter);
 
-    mainLayout->addWidget(fitToAllCheckBox,      6, 2, 1, 1, Qt::AlignCenter);
+    mainLayout->addWidget(fitToAllCheckBox,         6, 2, 1, 1, Qt::AlignCenter);
 
 //    mainLayout->addWidget(penStyleLabel,         4, 0, Qt::AlignRight);
 //    mainLayout->addWidget(penStyleComboBox,      4, 1);
@@ -247,6 +257,16 @@ Window::Window()
     antialiasingCheckBox->setChecked(true);
 
     setWindowTitle(tr("Pre-processing Tiling Debug Plotting"));
+}
+
+void Window::onTumorGridCellsVisibilityChanged()
+{
+    renderArea->setTumorGridCellsVisibility(tumorGridCellsCheckBox->checkState() == Qt::Checked);
+}
+
+void Window::onImmuneGridCellsVisibilityChanged()
+{
+    renderArea->setImmuneGridCellsVisibility(immuneGridCellsCheckBox->checkState() == Qt::Checked);
 }
 //! [10]
 

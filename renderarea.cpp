@@ -122,7 +122,7 @@ static const std::map<PointFlags, QColor> kQPointColorsMap =
     {PointFlags::NonProliferatingCD8  , Qt::blue},
     {PointFlags::ProliferatingCD8     , Qt::cyan},
     {PointFlags::ProliferatingTumor   , Qt::red},
-    {PointFlags::TumorProlifFinal     , Qt::red},
+    {PointFlags::TumorProlifFinal     , Qt::yellow},
     {PointFlags::ImmuneProlifFinal    , Qt::cyan},
     {PointFlags::ImmuneNonProlifFinal , Qt::blue},
 };
@@ -287,6 +287,24 @@ void RenderArea::setFittedToTotalLmits(bool fitted)
     update();
 }
 
+void RenderArea::setTumorGridCellsVisibility(bool areVisible)
+{
+    if (_areTumorGridCellsVisible == areVisible)
+        return;
+
+    _areTumorGridCellsVisible = areVisible;
+    update();
+}
+
+void RenderArea::setImmuneGridCellsVisibility(bool areVisible)
+{
+    if (_areImmuneGridCellsVisible == areVisible)
+        return;
+
+    _areImmuneGridCellsVisible = areVisible;
+    update();
+}
+
 uint32_t RenderArea::getTilesNumber() const
 {
     return _tiles.size();
@@ -398,46 +416,52 @@ void RenderArea::paintEvent(QPaintEvent *event)
         drawPointVector(pointKeyFlag);
     }
 
-    const auto drawCellSystem = [&painter](const CellSystem& cellSystem, const QRectF& tile) {
+    const auto drawCellSystem = [this, &painter](const CellSystem& cellSystem, const QRectF& tile) {
 
         painter.setPen(QPen(Qt::black, 0.5, Qt::SolidLine, Qt::SquareCap));
 
         const QRectF cellRect(tile.x(), tile.y(), tile.width()*0.01, tile.height()*0.01);
 
-        for (const Cell2D& cell : cellSystem._immuneCells)
+        if (_areImmuneGridCellsVisible)
         {
-            QColor color;
-            if (cell.getProliferationCapacity() == (int32_t)BiopsyTiler::getImmuneProliferatingCellCapacity())
+            for (const Cell2D& cell : cellSystem._immuneCells)
             {
-                color = Qt::cyan;
-            }
-            else
-            {
-                color.setRgbF(cell.getColor().x, cell.getColor().y, cell.getColor().z);
-            }
-            painter.setBrush(color);
+                QColor color;
+                if (cell.getProliferationCapacity() == (int32_t)BiopsyTiler::getImmuneProliferatingCellCapacity())
+                {
+                    color = Qt::cyan;
+                }
+                else
+                {
+                    color.setRgbF(cell.getColor().x, cell.getColor().y, cell.getColor().z);
+                }
+                painter.setBrush(color);
 
-            QRectF cellRectTranslated(cellRect);
-            cellRectTranslated.translate(cell.getPosition().x*cellRect.width(), (99-cell.getPosition().y)*cellRect.height());
-            painter.drawRect(cellRectTranslated);
+                QRectF cellRectTranslated(cellRect);
+                cellRectTranslated.translate(cell.getPosition().x*cellRect.width(), (99-cell.getPosition().y)*cellRect.height());
+                painter.drawRect(cellRectTranslated);
+            }
         }
 
-        for (const Cell2D& cell : cellSystem._tumorCells)
+        if (_areTumorGridCellsVisible)
         {
-            QColor color;
-            if (cell.getProliferationCapacity() == (int32_t)BiopsyTiler::getTumorProliferatingCellCapacity())
+            for (const Cell2D& cell : cellSystem._tumorCells)
             {
-                color = QColor(255, 128, 0);
-            }
-            else
-            {
-                color.setRgbF(cell.getColor().x, cell.getColor().y, cell.getColor().z);
-            }
-            painter.setBrush(color);
+                QColor color;
+                if (cell.getProliferationCapacity() == (int32_t)BiopsyTiler::getTumorProliferatingCellCapacity())
+                {
+                    color = Qt::yellow;
+                }
+                else
+                {
+                    color.setRgbF(cell.getColor().x, cell.getColor().y, cell.getColor().z);
+                }
+                painter.setBrush(color);
 
-            QRectF cellRectTranslated(cellRect);
-            cellRectTranslated.translate(cell.getPosition().x*cellRect.width(), (99-cell.getPosition().y)*cellRect.height());
-            painter.drawRect(cellRectTranslated);
+                QRectF cellRectTranslated(cellRect);
+                cellRectTranslated.translate(cell.getPosition().x*cellRect.width(), (99-cell.getPosition().y)*cellRect.height());
+                painter.drawRect(cellRectTranslated);
+            }
         }
     };
 

@@ -71,10 +71,12 @@ public:
     Window();
 
 private slots:
+    void onTumorGridCellsVisibilityChanged();
+    void onImmuneGridCellsVisibilityChanged();
     void onAnnotationsChanged();
     void onMarkersChanged();
     void conflictingTileChanged();
-    void tileChanged();;
+    void tileChanged();
     void penChanged();
     void brushChanged();
 
@@ -90,6 +92,9 @@ private:
     QLabel *annotationsLabel;
     QWidget *annotationCheckboxes;
     QWidget *markerCheckboxes;
+
+    QCheckBox* tumorGridCellsCheckBox;
+    QCheckBox* immuneGridCellsCheckBox;
 
     QLabel *penStyleLabel;
     QLabel *penCapLabel;

@@ -79,6 +79,10 @@ public slots:
     void setAntialiased(bool antialiased);
     void setFittedToTotalLmits(bool fitted);
 
+
+    void setTumorGridCellsVisibility(bool areVisible);
+    void setImmuneGridCellsVisibility(bool areVisible);
+
     uint32_t getTilesNumber() const;
     void setTile(int32_t number);
 
@@ -98,6 +102,9 @@ private:
     bool _antialiased;
     bool _fitToTotalLimits;
     QPixmap _pixmap;
+
+    bool _areTumorGridCellsVisible = false;
+    bool _areImmuneGridCellsVisible = false;
 
     std::map<PointFlags, QVector<QPointF>> qPointVectorMap;
     std::map<PolygonFlags, QPainterPath> qPathsMap;
