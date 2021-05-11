@@ -109,12 +109,17 @@ Window::Window()
 //! [1]
 
 //! [2]
-    conflictTileNoBox = new QSpinBox;
-    conflictTileNoBox->setRange(-1, renderArea->getConflictingTilesNumber() -1);
-    conflictTileNoBox->setSpecialValueText(tr("Conflict tile No."));
-
+    conflictTileNumberBox = new QSpinBox;
+    conflictTileNumberBox->setRange(-1, renderArea->getConflictingTilesNumber() -1);
+    conflictTileNumberBox->setSpecialValueText(tr("Conflict tile No."));
     conflictTileLabel = new QLabel(tr("Conflict &Label:"));
-    conflictTileLabel->setBuddy(conflictTileNoBox);
+    conflictTileLabel->setBuddy(conflictTileNumberBox);
+
+    tileNumberBox = new QSpinBox;
+    tileNumberBox->setRange(-1, renderArea->getTilesNumber() -1);
+    tileNumberBox->setSpecialValueText(tr("Tile No."));
+    tileLabel = new QLabel(tr("Tile &Label:"));
+    tileLabel->setBuddy(tileNumberBox);
 //! [2]
 
 //! [3]
@@ -186,8 +191,10 @@ Window::Window()
 //! [8]
 //    connect(annotationCheckboxes, QOverload<int>::of(&QComboBox::activated),
 //            this, &Window::onAnnotationsChanged);
-    connect(conflictTileNoBox, QOverload<int>::of(&QSpinBox::valueChanged),
+    connect(conflictTileNumberBox, QOverload<int>::of(&QSpinBox::valueChanged),
             this, &Window::conflictingTileChanged);
+    connect(tileNumberBox, QOverload<int>::of(&QSpinBox::valueChanged),
+            this, &Window::tileChanged);
     connect(penStyleComboBox, QOverload<int>::of(&QComboBox::activated),
             this, &Window::penChanged);
     connect(penCapComboBox, QOverload<int>::of(&QComboBox::activated),
@@ -205,24 +212,33 @@ Window::Window()
 //! [9]
     QGridLayout *mainLayout = new QGridLayout;
 //! [9] //! [10]
-    mainLayout->setColumnStretch(0, 1);
-    mainLayout->setColumnStretch(3, 1);
-    mainLayout->addWidget(renderArea, 0, 0, 1, 4);
-    mainLayout->addWidget(annotationsLabel, 2, 0, Qt::AlignRight);
-    mainLayout->addWidget(annotationCheckboxes, 2, 1);
-    mainLayout->addWidget(markerCheckboxes, 2, 2);
-    mainLayout->addWidget(conflictTileLabel, 3, 0, Qt::AlignRight);
-    mainLayout->addWidget(conflictTileNoBox, 3, 1);
-    mainLayout->addWidget(penStyleLabel, 4, 0, Qt::AlignRight);
-    mainLayout->addWidget(penStyleComboBox, 4, 1);
-    mainLayout->addWidget(penCapLabel, 3, 2, Qt::AlignRight);
-    mainLayout->addWidget(penCapComboBox, 3, 3);
-    mainLayout->addWidget(penJoinComboBox, 2, 3);
-    mainLayout->addWidget(brushStyleLabel, 4, 2, Qt::AlignRight);
-    mainLayout->addWidget(brushStyleComboBox, 4, 3);
-    mainLayout->addWidget(otherOptionsLabel, 5, 0, Qt::AlignRight);
-    mainLayout->addWidget(antialiasingCheckBox, 5, 1, 1, 1, Qt::AlignRight);
-    mainLayout->addWidget(fitToAllCheckBox, 5, 2, 1, 2, Qt::AlignRight);
+    mainLayout->setRowStretch(0, 1);
+
+    mainLayout->addWidget(renderArea,            0, 0, 1, 3);
+
+    mainLayout->addWidget(annotationsLabel,      2, 0, 1, 1, Qt::AlignBottom | Qt::AlignCenter);
+    mainLayout->addWidget(annotationCheckboxes,  3, 0, 4, 1, Qt::AlignTop    | Qt::AlignCenter);
+
+    mainLayout->addWidget(markerCheckboxes,      2, 1, 5, 1, Qt::AlignCenter);
+
+    mainLayout->addWidget(conflictTileLabel,     2, 2, 1, 1, Qt::AlignBottom | Qt::AlignCenter);
+    mainLayout->addWidget(conflictTileNumberBox, 3, 2, 1, 1, Qt::AlignTop    | Qt::AlignCenter);
+
+    mainLayout->addWidget(tileLabel,             4, 2, 1, 1, Qt::AlignBottom | Qt::AlignCenter);
+    mainLayout->addWidget(tileNumberBox,         5, 2, 1, 1, Qt::AlignTop    | Qt::AlignCenter);
+
+    mainLayout->addWidget(fitToAllCheckBox,      6, 2, 1, 1, Qt::AlignCenter);
+
+//    mainLayout->addWidget(penStyleLabel,         4, 0, Qt::AlignRight);
+//    mainLayout->addWidget(penStyleComboBox,      4, 1);
+//    mainLayout->addWidget(penCapLabel,           3, 2, Qt::AlignRight);
+//    mainLayout->addWidget(penCapComboBox,        3, 3);
+//    mainLayout->addWidget(penJoinComboBox,       2, 3);
+//    mainLayout->addWidget(brushStyleLabel,       4, 2, Qt::AlignRight);
+//    mainLayout->addWidget(brushStyleComboBox,    4, 3);
+//    mainLayout->addWidget(otherOptionsLabel,     5, 0, Qt::AlignRight);
+//    mainLayout->addWidget(antialiasingCheckBox,  5, 1, 1, 1, Qt::AlignRight);
+
     setLayout(mainLayout);
 
     onAnnotationsChanged();
@@ -271,7 +287,12 @@ void Window::onMarkersChanged()
 
 void Window::conflictingTileChanged()
 {
-    renderArea->setConflictingTile(conflictTileNoBox->value());
+    renderArea->setConflictingTile(conflictTileNumberBox->value());
+}
+
+void Window::tileChanged()
+{
+    renderArea->setTile(conflictTileNumberBox->value());
 }
 //! [11]
 
