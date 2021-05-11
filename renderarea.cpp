@@ -73,7 +73,7 @@ static QRectF getPointsBoundingRect(const QVector<QPointF>& points)
     }
 
     if (0 != points.size() % 2)
-    {//Get last box for already included point ana a last one, which is odd.
+    {//Get last box for already included point and a last one, which is odd.
         bbox.resize(BBox<qreal>({points[limits -2].x(),
                                  points[limits -2].y(),
                                  points[limits -1].x(),
@@ -91,7 +91,7 @@ static const std::map<PolygonFlags, QColor> kQPolygonPathColorsMap =
     {PolygonFlags::Exclude           , Qt::darkYellow},
     {PolygonFlags::TissueAndTumor    , Qt::transparent},
     {PolygonFlags::ExcludeOrNecrosis , Qt::transparent},
-    {PolygonFlags::Final             , Qt::green},
+    {PolygonFlags::Final             , Qt::darkGreen},
     {PolygonFlags::ConflictingBg     , Qt::transparent},
     {PolygonFlags::ConflictingCl     , Qt::transparent},
     {PolygonFlags::ConflictingSh     , Qt::transparent},
@@ -127,7 +127,7 @@ static const std::map<PointFlags, QColor> kQPointColorsMap =
     {PointFlags::ImmuneNonProlifFinal , Qt::blue},
 };
 
-static const QPen kBasePointPen = QPen(Qt::black, 10, Qt::SolidLine, Qt::RoundCap);
+static const QPen kBasePointPen = QPen(Qt::black, 7, Qt::SolidLine, Qt::RoundCap);
 
 static const std::map<PointFlags, QPen> kQPointPenMap =
 {
@@ -220,9 +220,9 @@ RenderArea::RenderArea(QWidget *parent)
         qPathsMap[flag].swap(paths);
     }
 
-    for (const BBox<double>& box : biopsyData.getTilesBoundaries())
+    for (const auto& [box, cellSystem] : biopsyData.getTiles())
     {
-        _tileBoundaries.push_back(getQRectFromBBox(box));
+        _tiles.emplace_back(getQRectFromBBox(box), cellSystem);
     }
 
 }
@@ -289,7 +289,7 @@ void RenderArea::setFittedToTotalLmits(bool fitted)
 
 uint32_t RenderArea::getTilesNumber() const
 {
-    return _tileBoundaries.size();
+    return _tiles.size();
 }
 
 void RenderArea::setTile(int32_t number)
@@ -323,6 +323,8 @@ void RenderArea::paintEvent(QPaintEvent *event)
     QSizeF scale(1, 1);
     QPointF translate(0, 0);
 
+    const CellSystem* gridCells = nullptr;
+
     if (_fitToTotalLimits) {
         scale = {paintAreaSize.width()  / _totalLimits.size().width(),
                  paintAreaSize.height() / _totalLimits.size().height()};
@@ -337,7 +339,8 @@ void RenderArea::paintEvent(QPaintEvent *event)
         }
         else if (_currentTile >= 0)
         {
-            limits = _tileBoundaries[_currentTile];
+            limits = _tiles[_currentTile].first;
+            gridCells = &_tiles[_currentTile].second;
         }
         else
         {
@@ -362,7 +365,7 @@ void RenderArea::paintEvent(QPaintEvent *event)
 //    painter.setPen(palette().dark().color());
 //    painter.drawRect(QRect(0, 0, width() - 1, height() - 1));
 
-    auto drawPolygon = [this, &painter](PolygonFlags flag) {
+    const auto drawPolygon = [this, &painter](PolygonFlags flag) {
         QColor controlColor(kQPolygonPathColorsMap.at(flag));
         painter.setPen(kQPolygonPathPensMap.at(flag));
         controlColor.setAlpha(128);
@@ -378,7 +381,7 @@ void RenderArea::paintEvent(QPaintEvent *event)
         drawPolygon(polygonKeyFlag);
     }
 
-    auto drawPointVector = [this, &painter](PointFlags flag) {
+    const auto drawPointVector = [this, &painter](PointFlags flag) {
         const QColor color(kQPointColorsMap.at(flag));
         painter.setBrush(color);
         QPen pen(kQPointPenMap.at(flag));
@@ -395,11 +398,58 @@ void RenderArea::paintEvent(QPaintEvent *event)
         drawPointVector(pointKeyFlag);
     }
 
+    const auto drawCellSystem = [&painter](const CellSystem& cellSystem, const QRectF& tile) {
+
+        painter.setPen(QPen(Qt::black, 0.5, Qt::SolidLine, Qt::SquareCap));
+
+        const QRectF cellRect(tile.x(), tile.y(), tile.width()*0.01, tile.height()*0.01);
+
+        for (const Cell2D& cell : cellSystem._immuneCells)
+        {
+            QColor color;
+            if (cell.getProliferationCapacity() == (int32_t)BiopsyTiler::getImmuneProliferatingCellCapacity())
+            {
+                color = Qt::cyan;
+            }
+            else
+            {
+                color.setRgbF(cell.getColor().x, cell.getColor().y, cell.getColor().z);
+            }
+            painter.setBrush(color);
+
+            QRectF cellRectTranslated(cellRect);
+            cellRectTranslated.translate(cell.getPosition().x*cellRect.width(), (99-cell.getPosition().y)*cellRect.height());
+            painter.drawRect(cellRectTranslated);
+        }
+
+        for (const Cell2D& cell : cellSystem._tumorCells)
+        {
+            QColor color;
+            if (cell.getProliferationCapacity() == (int32_t)BiopsyTiler::getTumorProliferatingCellCapacity())
+            {
+                color = QColor(255, 128, 0);
+            }
+            else
+            {
+                color.setRgbF(cell.getColor().x, cell.getColor().y, cell.getColor().z);
+            }
+            painter.setBrush(color);
+
+            QRectF cellRectTranslated(cellRect);
+            cellRectTranslated.translate(cell.getPosition().x*cellRect.width(), (99-cell.getPosition().y)*cellRect.height());
+            painter.drawRect(cellRectTranslated);
+        }
+    };
+
     painter.setPen(kBasePointPen);
     painter.setBrush(Qt::transparent);
-    for(const QRectF& tile: _tileBoundaries)
+    for(const auto& [tile, cellSystem]: _tiles)
     {
         painter.drawRect(tile);
+        if (&cellSystem == gridCells)
+        {
+            drawCellSystem(cellSystem, tile);
+        }
     }
 }
 

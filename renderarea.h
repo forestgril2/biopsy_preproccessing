@@ -59,6 +59,8 @@
 
 #include <BiopsyTilerMaps.h>
 
+class CellSystem;
+
 class RenderArea : public QWidget
 {
     Q_OBJECT
@@ -100,7 +102,7 @@ private:
     std::map<PointFlags, QVector<QPointF>> qPointVectorMap;
     std::map<PolygonFlags, QPainterPath> qPathsMap;
     QRectF _totalLimits;
-    std::vector<QRectF> _tileBoundaries;
+    std::vector<std::pair<QRectF, CellSystem>> _tiles;
     std::vector<QRectF> _conflictingTileBoundaries;
 
     int32_t _currentTile = -1;

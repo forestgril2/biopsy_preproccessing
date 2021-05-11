@@ -292,7 +292,7 @@ void Window::conflictingTileChanged()
 
 void Window::tileChanged()
 {
-    renderArea->setTile(conflictTileNumberBox->value());
+    renderArea->setTile(tileNumberBox->value());
 }
 //! [11]
 
