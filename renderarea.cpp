@@ -221,7 +221,7 @@ RenderArea::RenderArea(QWidget *parent)
         qPathsMap[flag].swap(paths);
     }
 
-    for (const BBox<double>& box : biopsyData.getTiles())
+    for (const BBox<double>& box : biopsyData.getTilesBoundaries())
     {
         _tiles.push_back(getQRectFromBBox(box));
     }
