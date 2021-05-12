@@ -220,24 +220,24 @@ Window::Window()
 //! [9]
     QGridLayout *mainLayout = new QGridLayout;
 //! [9] //! [10]
-    mainLayout->setRowStretch(0, 1);
+    mainLayout->setColumnStretch(0, 1);
 
-    mainLayout->addWidget(renderArea,               0, 0, 1, 3);
+    mainLayout->addWidget(renderArea,               0, 0, 10, 1);
 
-    mainLayout->addWidget(annotationsLabel,         2, 0, 1, 1, Qt::AlignBottom | Qt::AlignCenter);
-    mainLayout->addWidget(annotationCheckboxes,     3, 0, 4, 1, Qt::AlignTop    | Qt::AlignCenter);
+    mainLayout->addWidget(annotationsLabel,         0, 1, 1, 1, Qt::AlignBottom | Qt::AlignCenter);
+    mainLayout->addWidget(annotationCheckboxes,     1, 1, 1, 1, Qt::AlignTop    | Qt::AlignCenter);
 
-    mainLayout->addWidget(markerCheckboxes,         2, 1, 2, 1, Qt::AlignCenter);
-    mainLayout->addWidget(tumorGridCellsCheckBox,   4, 1, 1, 1, Qt::AlignBottom | Qt::AlignCenter);
-    mainLayout->addWidget(immuneGridCellsCheckBox,  5, 1, 1, 1, Qt::AlignTop    | Qt::AlignCenter);
+    mainLayout->addWidget(markerCheckboxes,         2, 1, 1, 1, Qt::AlignBottom | Qt::AlignCenter);
+    mainLayout->addWidget(tumorGridCellsCheckBox,   3, 1, 1, 1, Qt::AlignBottom | Qt::AlignCenter);
+    mainLayout->addWidget(immuneGridCellsCheckBox,  4, 1, 1, 1, Qt::AlignTop    | Qt::AlignCenter);
 
-    mainLayout->addWidget(conflictTileLabel,        2, 2, 1, 1, Qt::AlignBottom | Qt::AlignCenter);
-    mainLayout->addWidget(conflictTileNumberBox,    3, 2, 1, 1, Qt::AlignTop    | Qt::AlignCenter);
+    mainLayout->addWidget(conflictTileLabel,        5, 1, 1, 1, Qt::AlignBottom | Qt::AlignCenter);
+    mainLayout->addWidget(conflictTileNumberBox,    6, 1, 1, 1, Qt::AlignTop    | Qt::AlignCenter);
 
-    mainLayout->addWidget(tileLabel,                4, 2, 1, 1, Qt::AlignBottom | Qt::AlignCenter);
-    mainLayout->addWidget(tileNumberBox,            5, 2, 1, 1, Qt::AlignTop    | Qt::AlignCenter);
+    mainLayout->addWidget(tileLabel,                7, 1, 1, 1, Qt::AlignBottom | Qt::AlignCenter);
+    mainLayout->addWidget(tileNumberBox,            8, 1, 1, 1, Qt::AlignTop    | Qt::AlignCenter);
 
-    mainLayout->addWidget(fitToAllCheckBox,         6, 2, 1, 1, Qt::AlignCenter);
+    mainLayout->addWidget(fitToAllCheckBox,         9, 1, 1, 1, Qt::AlignCenter);
 
 //    mainLayout->addWidget(penStyleLabel,         4, 0, Qt::AlignRight);
 //    mainLayout->addWidget(penStyleComboBox,      4, 1);
