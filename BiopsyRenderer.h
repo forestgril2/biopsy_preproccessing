@@ -9,13 +9,15 @@
 #include <BiopsyTilerMaps.h>
 
 class CellSystem;
+class BiopsyTiler;
 
 class BiopsyRenderer : public QWidget
 {
     Q_OBJECT
 
 public:
-    explicit BiopsyRenderer(QWidget *parent = nullptr);
+    explicit BiopsyRenderer(const BiopsyTiler& biopsyTilerData,
+                            QWidget *parent = nullptr);
 
     QSize minimumSizeHint() const override;
     QSize sizeHint() const override;

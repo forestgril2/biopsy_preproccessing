@@ -5,6 +5,7 @@
 
 #include <QtWidgets>
 
+#include <BiopsyTiler.h>
 #include <BiopsyRenderer.h>
 #include <BiopsyTilerMaps.h>
 
@@ -20,9 +21,11 @@ static const std::set<PolygonFlags> kFlagsWitchCheckboxesChecked =
     PolygonFlags::ConflictingTiles
 };
 
-BiopsyTilerExplorer::BiopsyTilerExplorer()
+BiopsyTilerExplorer::BiopsyTilerExplorer(const std::string& cellPositionsJsonPath,
+                                         const std::string& annotationsJsonPath)
 {
-    renderArea = new BiopsyRenderer;
+    const BiopsyTiler biopsyTilerData(cellPositionsJsonPath, annotationsJsonPath);
+    renderArea = new BiopsyRenderer(biopsyTilerData);
 
     {
         annotationCheckboxes = new QWidget;

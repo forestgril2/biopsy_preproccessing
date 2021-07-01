@@ -10,9 +10,6 @@
 
 #include <BiopsyTiler.h>
 
-static const std::string kDefaultCellPositionsJsonPath("G:\\Shared drives\\MathPath\\03 Execute\\User Stories\\Preprocessing\\p55_post.json");
-static const std::string kDefaultAnnotationsJsonPath("G:\\Shared drives\\MathPath\\03 Execute\\User Stories\\Preprocessing\\p55_poly_post.json");
-
 static QRectF getPointsBoundingRect(const QVector<QPointF>& points)
 {
     BBox<qreal> bbox;
@@ -113,7 +110,7 @@ static QRectF getQRectFromBBox(const BBox<double>& limits)
     return converted;
 }
 
-BiopsyRenderer::BiopsyRenderer(QWidget *parent)
+BiopsyRenderer::BiopsyRenderer(const BiopsyTiler& biopsyTilerData, QWidget *parent)
     : QWidget(parent)
 {
     _polygonFlags = std::underlying_type_t<PolygonFlags>(PolygonFlags::Tumor);
@@ -124,12 +121,10 @@ BiopsyRenderer::BiopsyRenderer(QWidget *parent)
     setBackgroundRole(QPalette::Base);
     setAutoFillBackground(true);
 
-    const BiopsyTiler biopsyData(kDefaultCellPositionsJsonPath, kDefaultAnnotationsJsonPath);
+    _totalLimits = getQRectFromBBox(biopsyTilerData.getTotalLimits());
 
-    _totalLimits = getQRectFromBBox(biopsyData.getTotalLimits());
-
-    const std::map<PointFlags, std::vector<bgPoint>>& pointsBgVectorMap = biopsyData.getBgPoints();
-    const std::map<PolygonFlags, std::vector<bgPolygon>>& polygonVectorMap = biopsyData.getBgPolygons();
+    const std::map<PointFlags, std::vector<bgPoint>>& pointsBgVectorMap = biopsyTilerData.getBgPoints();
+    const std::map<PolygonFlags, std::vector<bgPolygon>>& polygonVectorMap = biopsyTilerData.getBgPolygons();
 
     if (polygonVectorMap.end() != polygonVectorMap.find(PolygonFlags::ConflictingTiles))
     {
@@ -173,7 +168,7 @@ BiopsyRenderer::BiopsyRenderer(QWidget *parent)
         qPathsMap[flag].swap(paths);
     }
 
-    for (const auto& [box, cellSystem] : biopsyData.getTiles())
+    for (const auto& [box, cellSystem] : biopsyTilerData.getTiles())
     {
         _tiles.emplace_back(getQRectFromBBox(box), cellSystem);
     }

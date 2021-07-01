@@ -17,7 +17,8 @@ class BiopsyTilerExplorer : public QWidget
     Q_OBJECT
 
 public:
-    BiopsyTilerExplorer();
+    BiopsyTilerExplorer(const std::string& cellPositionsJsonPath,
+                        const std::string& annotationsJsonPath);
 
 private slots:
     void onTumorGridCellsVisibilityChanged();
