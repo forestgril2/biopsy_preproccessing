@@ -1,64 +1,12 @@
-/****************************************************************************
-**
-** Copyright (C) 2016 The Qt Company Ltd.
-** Contact: https://www.qt.io/licensing/
-**
-** This file is part of the examples of the Qt Toolkit.
-**
-** $QT_BEGIN_LICENSE:BSD$
-** Commercial License Usage
-** Licensees holding valid commercial Qt licenses may use this file in
-** accordance with the commercial license agreement provided with the
-** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and The Qt Company. For licensing terms
-** and conditions see https://www.qt.io/terms-conditions. For further
-** information use the contact form at https://www.qt.io/contact-us.
-**
-** BSD License Usage
-** Alternatively, you may use this file under the terms of the BSD license
-** as follows:
-**
-** "Redistribution and use in source and binary forms, with or without
-** modification, are permitted provided that the following conditions are
-** met:
-**   * Redistributions of source code must retain the above copyright
-**     notice, this list of conditions and the following disclaimer.
-**   * Redistributions in binary form must reproduce the above copyright
-**     notice, this list of conditions and the following disclaimer in
-**     the documentation and/or other materials provided with the
-**     distribution.
-**   * Neither the name of The Qt Company Ltd nor the names of its
-**     contributors may be used to endorse or promote products derived
-**     from this software without specific prior written permission.
-**
-**
-** THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-** "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-** LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-** A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-** OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-** SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-** LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-** DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-** THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-** (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-** OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
-**
-** $QT_END_LICENSE$
-**
-****************************************************************************/
+#include <BiopsyTilerExplorer.h>
 
 #include <type_traits>
 #include <set>
 
 #include <QtWidgets>
 
+#include <BiopsyRenderer.h>
 #include <BiopsyTilerMaps.h>
-
-#include "renderarea.h"
-#include "window.h"
-
-
 
 //! [0]
 const int IdRole = Qt::UserRole;
@@ -72,9 +20,9 @@ static const std::set<PolygonFlags> kFlagsWitchCheckboxesChecked =
     PolygonFlags::ConflictingTiles
 };
 
-Window::Window()
+BiopsyTilerExplorer::BiopsyTilerExplorer()
 {
-    renderArea = new RenderArea;
+    renderArea = new BiopsyRenderer;
 
     {
         annotationCheckboxes = new QWidget;
@@ -82,7 +30,7 @@ Window::Window()
         for(const auto& [key, typeString] : kPolygonTypeNamesToFlags)
         {
             QCheckBox* box = new QCheckBox(tr(typeString.c_str()));
-            connect(box, &QCheckBox::stateChanged, this, &Window::onAnnotationsChanged);
+            connect(box, &QCheckBox::stateChanged, this, &BiopsyTilerExplorer::onAnnotationsChanged);
             annotationCheckboxes->layout()->addWidget(box);
             box->setChecked(kFlagsWitchCheckboxesChecked.end() != kFlagsWitchCheckboxesChecked.find(key));
         }
@@ -97,7 +45,7 @@ Window::Window()
         for(const auto& [key, typeString] : kPointTypeNamesToFlags)
         {
             QCheckBox* box = new QCheckBox(tr(typeString.c_str()));
-            connect(box, &QCheckBox::stateChanged, this, &Window::onMarkersChanged);
+            connect(box, &QCheckBox::stateChanged, this, &BiopsyTilerExplorer::onMarkersChanged);
             markerCheckboxes->layout()->addWidget(box);
             box->setChecked(false);
         }
@@ -108,11 +56,11 @@ Window::Window()
 
     tumorGridCellsCheckBox = new QCheckBox("Tumor grid cells");
     tumorGridCellsCheckBox->setChecked(false);
-    connect(tumorGridCellsCheckBox, &QCheckBox::stateChanged, this, &Window::onTumorGridCellsVisibilityChanged);
+    connect(tumorGridCellsCheckBox, &QCheckBox::stateChanged, this, &BiopsyTilerExplorer::onTumorGridCellsVisibilityChanged);
 
     immuneGridCellsCheckBox = new QCheckBox("Immune  grid cells");
     immuneGridCellsCheckBox->setChecked(false);
-    connect(immuneGridCellsCheckBox, &QCheckBox::stateChanged, this, &Window::onImmuneGridCellsVisibilityChanged);
+    connect(immuneGridCellsCheckBox, &QCheckBox::stateChanged, this, &BiopsyTilerExplorer::onImmuneGridCellsVisibilityChanged);
 
 //! [1]
 
@@ -198,23 +146,23 @@ Window::Window()
 
 //! [8]
 //    connect(annotationCheckboxes, QOverload<int>::of(&QComboBox::activated),
-//            this, &Window::onAnnotationsChanged);
+//            this, &BiopsyTilerExplorer::onAnnotationsChanged);
     connect(conflictTileNumberBox, QOverload<int>::of(&QSpinBox::valueChanged),
-            this, &Window::conflictingTileChanged);
+            this, &BiopsyTilerExplorer::conflictingTileChanged);
     connect(tileNumberBox, QOverload<int>::of(&QSpinBox::valueChanged),
-            this, &Window::tileChanged);
+            this, &BiopsyTilerExplorer::tileChanged);
     connect(penStyleComboBox, QOverload<int>::of(&QComboBox::activated),
-            this, &Window::penChanged);
+            this, &BiopsyTilerExplorer::penChanged);
     connect(penCapComboBox, QOverload<int>::of(&QComboBox::activated),
-            this, &Window::penChanged);
+            this, &BiopsyTilerExplorer::penChanged);
     connect(penJoinComboBox, QOverload<int>::of(&QComboBox::activated),
-            this, &Window::penChanged);
+            this, &BiopsyTilerExplorer::penChanged);
     connect(brushStyleComboBox, QOverload<int>::of(&QComboBox::activated),
-            this, &Window::brushChanged);
+            this, &BiopsyTilerExplorer::brushChanged);
     connect(antialiasingCheckBox, &QAbstractButton::toggled,
-            renderArea, &RenderArea::setAntialiased);
+            renderArea, &BiopsyRenderer::setAntialiased);
     connect(fitToAllCheckBox, &QAbstractButton::toggled,
-            renderArea, &RenderArea::setFittedToTotalLmits);
+            renderArea, &BiopsyRenderer::setFittedToTotalLmits);
 //! [8]
 
 //! [9]
@@ -259,19 +207,19 @@ Window::Window()
     setWindowTitle(tr("Pre-processing Tiling Debug Plotting"));
 }
 
-void Window::onTumorGridCellsVisibilityChanged()
+void BiopsyTilerExplorer::onTumorGridCellsVisibilityChanged()
 {
     renderArea->setTumorGridCellsVisibility(tumorGridCellsCheckBox->checkState() == Qt::Checked);
 }
 
-void Window::onImmuneGridCellsVisibilityChanged()
+void BiopsyTilerExplorer::onImmuneGridCellsVisibilityChanged()
 {
     renderArea->setImmuneGridCellsVisibility(immuneGridCellsCheckBox->checkState() == Qt::Checked);
 }
 //! [10]
 
 //! [11]
-void Window::onAnnotationsChanged()
+void BiopsyTilerExplorer::onAnnotationsChanged()
 {
     std::underlying_type_t<PolygonFlags> annotationFlags = 0;
     for(uint32_t itemIndex=0; itemIndex<uint32_t(annotationCheckboxes->layout()->count()); ++itemIndex)
@@ -288,7 +236,7 @@ void Window::onAnnotationsChanged()
     renderArea->setAnnotation(annotationFlags);
 }
 
-void Window::onMarkersChanged()
+void BiopsyTilerExplorer::onMarkersChanged()
 {
     uint32_t pointTypeFlags = 0;
     for(uint32_t itemIndex=0; itemIndex<uint32_t(markerCheckboxes->layout()->count()); ++itemIndex)
@@ -305,19 +253,19 @@ void Window::onMarkersChanged()
     renderArea->setMarkers(pointTypeFlags);
 }
 
-void Window::conflictingTileChanged()
+void BiopsyTilerExplorer::conflictingTileChanged()
 {
     renderArea->setConflictingTile(conflictTileNumberBox->value());
 }
 
-void Window::tileChanged()
+void BiopsyTilerExplorer::tileChanged()
 {
     renderArea->setTile(tileNumberBox->value());
 }
 //! [11]
 
 //! [12]
-void Window::penChanged()
+void BiopsyTilerExplorer::penChanged()
 {
     int width = 10;
     Qt::PenStyle style = Qt::PenStyle(penStyleComboBox->itemData(
@@ -332,7 +280,7 @@ void Window::penChanged()
 //! [12]
 
 //! [13]
-void Window::brushChanged()
+void BiopsyTilerExplorer::brushChanged()
 {
     Qt::BrushStyle style = Qt::BrushStyle(brushStyleComboBox->itemData(
 //! [13]

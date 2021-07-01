@@ -5,8 +5,8 @@ requires(qtConfig(combobox))
 #DEFINES += NDEBUG
 DEFINES += DEBUG_REPEATING_OCCUPATION_INDEXES
 
-HEADERS       = renderarea.h                              \
-                window.h                                  \
+HEADERS       = BiopsyRenderer.h                              \
+                BiopsyTilerExplorer.h                                  \
                 ..\mathpath-core\src\BiopsyTiler.h        \
                 ..\mathpath-core\src\BiopsyTilerMaps.h    \
                 ..\mathpath-core\src\clipper.hpp          \
@@ -18,8 +18,8 @@ HEADERS       = renderarea.h                              \
                 ..\mathpath-core\src\Random.h
 
 SOURCES       = main.cpp                                    \
-                renderarea.cpp                              \
-                window.cpp                                  \
+                BiopsyRenderer.cpp                              \
+                BiopsyTilerExplorer.cpp                                  \
                 ..\mathpath-core\src\BiopsyTiler.cpp        \
                 ..\mathpath-core\src\Cell2D.cpp             \
                 ..\mathpath-core\src\CellOccupationGrid.cpp \
@@ -28,8 +28,6 @@ SOURCES       = main.cpp                                    \
                 ..\mathpath-core\src\clipper.cpp            \
                 ..\mathpath-core\src\Chronograph.cpp        \
                 ..\mathpath-core\src\Random.cpp
-
-RESOURCES     = basicdrawing.qrc
 
 INCLUDEPATH = ..\mathpath-core\src     \
               ..\glm                   \
