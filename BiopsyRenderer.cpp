@@ -13,6 +13,10 @@
 static QRectF getPointsBoundingRect(const QVector<QPointF>& points)
 {
     BBox<qreal> bbox;
+
+    if (points.size() == 0)
+        return QRectF{QPointF{bbox[0], bbox[1]}, QPointF{bbox[2], bbox[3]}};
+
     const uint32_t limits = (uint32_t)points.size() -1;
     for(uint32_t i=0; i<limits; i+=2)
     {

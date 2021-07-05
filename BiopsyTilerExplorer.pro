@@ -1,4 +1,4 @@
-QT += widgets gui
+QT += core widgets gui
 CONFIG += c++1z
 requires(qtConfig(combobox))
 

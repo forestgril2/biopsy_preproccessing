@@ -7,10 +7,24 @@ static const std::string kDefaultAnnotationsJsonPath("G:\\Shared drives\\MathPat
 
 int main(int argc, char *argv[])
 {
+    std::cout << " ### BiopsyTilerExplorer, start" << std::endl;
+
     Chronograph::setOutputFile("TimeLog.txt");
 
+    if(argc != 3)
+    {
+        std::cout << " ### ERROR BiopsyTilerExplorer: wrong or missing input parameters. Exiting." << std::endl;
+        exit(0);
+    }
+
+    std::string positionsPath(argv[1]);
+    std::string annotationsPath(argv[2]);
+
+    std::cout << " ### BiopsyTilerExplorer, positionsPath: " << positionsPath << std::endl;
+    std::cout << " ### BiopsyTilerExplorer, input parameters: " << annotationsPath <<std::endl;
+
     QApplication app(argc, argv);
-    BiopsyTilerExplorer explorerWindow(kDefaultCellPositionsJsonPath, kDefaultAnnotationsJsonPath);
+    BiopsyTilerExplorer explorerWindow(positionsPath, annotationsPath);
     explorerWindow.show();
     return app.exec();
 }

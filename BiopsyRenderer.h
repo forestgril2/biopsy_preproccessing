@@ -1,5 +1,7 @@
 #pragma once
 
+#include <utility>
+
 #include <QBrush>
 #include <QPen>
 #include <QPixmap>
@@ -7,6 +9,8 @@
 #include <QPainterPath>
 
 #include <BiopsyTilerMaps.h>
+#include <CellSystem.h>
+
 
 class CellSystem;
 class BiopsyTiler;
