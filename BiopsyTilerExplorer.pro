@@ -2,11 +2,17 @@ QT += core widgets gui
 CONFIG += c++1z
 requires(qtConfig(combobox))
 
+#win32-msvc* {}
+#else {
+#QMAKE_CXXFLAGS += -Wa,-mbig-obj
+#}
+
 #DEFINES += NDEBUG
 DEFINES += DEBUG_REPEATING_OCCUPATION_INDEXES
 
-HEADERS       = BiopsyRenderer.h                              \
-                BiopsyTilerExplorer.h                                  \
+HEADERS       = BiopsyRenderer.h                          \
+                ../mathpath-core/src/JsonHandler.h \
+                BiopsyTilerExplorer.h                     \
                 ..\mathpath-core\src\BiopsyTiler.h        \
                 ..\mathpath-core\src\BiopsyTilerMaps.h    \
                 ..\mathpath-core\src\clipper.hpp          \
@@ -18,8 +24,9 @@ HEADERS       = BiopsyRenderer.h                              \
                 ..\mathpath-core\src\Random.h
 
 SOURCES       = main.cpp                                    \
-                BiopsyRenderer.cpp                              \
-                BiopsyTilerExplorer.cpp                                  \
+                ../mathpath-core/src/JsonHandler.cpp \
+                BiopsyRenderer.cpp                          \
+                BiopsyTilerExplorer.cpp                     \
                 ..\mathpath-core\src\BiopsyTiler.cpp        \
                 ..\mathpath-core\src\Cell2D.cpp             \
                 ..\mathpath-core\src\CellOccupationGrid.cpp \

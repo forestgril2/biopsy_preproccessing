@@ -1,5 +1,6 @@
 #include <BiopsyTilerExplorer.h>
 
+#include <fstream>
 #include <type_traits>
 #include <set>
 
@@ -9,10 +10,10 @@
 #include <BiopsyRenderer.h>
 #include <BiopsyTilerMaps.h>
 
-//! [0]
-const int IdRole = Qt::UserRole;
-//! [0]
+#include <JsonHandler.h>
+using json = nlohmann::json;
 
+const int IdRole = Qt::UserRole;
 
 static const std::set<PolygonFlags> kFlagsWitchCheckboxesChecked =
 {
@@ -25,6 +26,17 @@ BiopsyTilerExplorer::BiopsyTilerExplorer(const std::string& cellPositionsJsonPat
                                          const std::string& annotationsJsonPath)
 {
     const BiopsyTiler biopsyTilerData(cellPositionsJsonPath, annotationsJsonPath);
+
+    json tilesJson;
+    const auto& tiles = biopsyTilerData.getTiles();
+    for(const auto& [boundary, tile] : tiles)
+    {
+        tilesJson.push_back(tile);
+    }
+    std::ofstream jsonTilesFile("jsonTiles.json");
+    jsonTilesFile << tilesJson;
+
+
     renderArea = new BiopsyRenderer(biopsyTilerData);
 
     {
